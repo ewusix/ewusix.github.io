@@ -1,3 +1,285 @@
-<html><body>
-    <h1>Hejka!</h1>
-</body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chemical Elements Catalogue</title>
+    <style>
+        /* --- General Page Styling --- */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            margin: 0;
+            padding: 40px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        p.subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 40px;
+        }
+
+        /* --- Catalogue Grid Layout --- */
+        .catalogue {
+            display: grid;
+            /* Creates a responsive grid that fits as many columns as possible */
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* --- Element Card Styling --- */
+        .element-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            position: relative;
+            cursor: pointer;
+            overflow: hidden;
+            border-top: 6px solid #ccc; /* Default border color */
+        }
+
+        /* Hover Effect */
+        .element-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0,0,0,0.15);
+        }
+
+        /* Internal Card Typography */
+        .atomic-number {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            position: absolute;
+            top: 10px;
+            left: 15px;
+        }
+
+        .atomic-mass {
+            font-size: 0.8rem;
+            color: #95a5a6;
+            position: absolute;
+            top: 10px;
+            right: 15px;
+        }
+
+        .symbol {
+            font-size: 3rem;
+            font-weight: 700;
+            text-align: center;
+            margin-top: 25px;
+            margin-bottom: 5px;
+            color: #2c3e50;
+        }
+
+        .name {
+            text-align: center;
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+
+        .category {
+            text-align: center;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #999;
+        }
+
+        /* --- Category Color Coding --- */
+        /* Non-Metals: Green */
+        .non-metal { border-top-color: #2ecc71; }
+        .non-metal .symbol { color: #2ecc71; }
+
+        /* Noble Gases: Purple */
+        .noble-gas { border-top-color: #9b59b6; }
+        .noble-gas .symbol { color: #8e44ad; }
+
+        /* Alkali Metals: Red */
+        .alkali-metal { border-top-color: #e74c3c; }
+        .alkali-metal .symbol { color: #c0392b; }
+
+        /* Alkaline Earth Metals: Orange */
+        .alkaline-earth { border-top-color: #e67e22; }
+        .alkaline-earth .symbol { color: #d35400; }
+
+        /* Metalloids: Teal */
+        .metalloid { border-top-color: #1abc9c; }
+        .metalloid .symbol { color: #16a085; }
+        
+        /* Post-transition Metals: Blue */
+        .post-transition { border-top-color: #3498db; }
+        .post-transition .symbol { color: #2980b9; }
+
+    </style>
+</head>
+<body>
+
+    
+
+[Image of Periodic Table of Elements]
+
+
+    <h1>Periodic Catalogue</h1>
+    <p class="subtitle">A selection of the first 18 chemical elements</p>
+
+    <div class="catalogue">
+
+        <div class="element-card non-metal">
+            <span class="atomic-number">1</span>
+            <span class="atomic-mass">1.008</span>
+            <div class="symbol">H</div>
+            <div class="name">Hydrogen</div>
+            <div class="category">Non-metal</div>
+        </div>
+
+        <div class="element-card noble-gas">
+            <span class="atomic-number">2</span>
+            <span class="atomic-mass">4.002</span>
+            <div class="symbol">He</div>
+            <div class="name">Helium</div>
+            <div class="category">Noble Gas</div>
+        </div>
+
+        <div class="element-card alkali-metal">
+            <span class="atomic-number">3</span>
+            <span class="atomic-mass">6.94</span>
+            <div class="symbol">Li</div>
+            <div class="name">Lithium</div>
+            <div class="category">Alkali Metal</div>
+        </div>
+
+        <div class="element-card alkaline-earth">
+            <span class="atomic-number">4</span>
+            <span class="atomic-mass">9.012</span>
+            <div class="symbol">Be</div>
+            <div class="name">Beryllium</div>
+            <div class="category">Alkaline Earth</div>
+        </div>
+
+        <div class="element-card metalloid">
+            <span class="atomic-number">5</span>
+            <span class="atomic-mass">10.81</span>
+            <div class="symbol">B</div>
+            <div class="name">Boron</div>
+            <div class="category">Metalloid</div>
+        </div>
+
+        <div class="element-card non-metal">
+            <span class="atomic-number">6</span>
+            <span class="atomic-mass">12.01</span>
+            <div class="symbol">C</div>
+            <div class="name">Carbon</div>
+            <div class="category">Non-metal</div>
+        </div>
+
+        <div class="element-card non-metal">
+            <span class="atomic-number">7</span>
+            <span class="atomic-mass">14.00</span>
+            <div class="symbol">N</div>
+            <div class="name">Nitrogen</div>
+            <div class="category">Non-metal</div>
+        </div>
+
+        <div class="element-card non-metal">
+            <span class="atomic-number">8</span>
+            <span class="atomic-mass">15.99</span>
+            <div class="symbol">O</div>
+            <div class="name">Oxygen</div>
+            <div class="category">Non-metal</div>
+        </div>
+
+        <div class="element-card non-metal">
+            <span class="atomic-number">9</span>
+            <span class="atomic-mass">18.99</span>
+            <div class="symbol">F</div>
+            <div class="name">Fluorine</div>
+            <div class="category">Non-metal</div>
+        </div>
+
+        <div class="element-card noble-gas">
+            <span class="atomic-number">10</span>
+            <span class="atomic-mass">20.18</span>
+            <div class="symbol">Ne</div>
+            <div class="name">Neon</div>
+            <div class="category">Noble Gas</div>
+        </div>
+
+        <div class="element-card alkali-metal">
+            <span class="atomic-number">11</span>
+            <span class="atomic-mass">22.99</span>
+            <div class="symbol">Na</div>
+            <div class="name">Sodium</div>
+            <div class="category">Alkali Metal</div>
+        </div>
+
+        <div class="element-card alkaline-earth">
+            <span class="atomic-number">12</span>
+            <span class="atomic-mass">24.30</span>
+            <div class="symbol">Mg</div>
+            <div class="name">Magnesium</div>
+            <div class="category">Alkaline Earth</div>
+        </div>
+        
+         <div class="element-card post-transition">
+            <span class="atomic-number">13</span>
+            <span class="atomic-mass">26.98</span>
+            <div class="symbol">Al</div>
+            <div class="name">Aluminium</div>
+            <div class="category">Post-transition</div>
+        </div>
+
+         <div class="element-card metalloid">
+            <span class="atomic-number">14</span>
+            <span class="atomic-mass">28.08</span>
+            <div class="symbol">Si</div>
+            <div class="name">Silicon</div>
+            <div class="category">Metalloid</div>
+        </div>
+
+         <div class="element-card non-metal">
+            <span class="atomic-number">15</span>
+            <span class="atomic-mass">30.97</span>
+            <div class="symbol">P</div>
+            <div class="name">Phosphorus</div>
+            <div class="category">Non-metal</div>
+        </div>
+
+         <div class="element-card non-metal">
+            <span class="atomic-number">16</span>
+            <span class="atomic-mass">32.06</span>
+            <div class="symbol">S</div>
+            <div class="name">Sulfur</div>
+            <div class="category">Non-metal</div>
+        </div>
+
+         <div class="element-card non-metal">
+            <span class="atomic-number">17</span>
+            <span class="atomic-mass">35.45</span>
+            <div class="symbol">Cl</div>
+            <div class="name">Chlorine</div>
+            <div class="category">Non-metal</div>
+        </div>
+
+         <div class="element-card noble-gas">
+            <span class="atomic-number">18</span>
+            <span class="atomic-mass">39.94</span>
+            <div class="symbol">Ar</div>
+            <div class="name">Argon</div>
+            <div class="category">Noble Gas</div>
+        </div>
+
+    </div>
+
+</body>
+</html>
