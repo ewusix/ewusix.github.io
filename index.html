@@ -3,282 +3,372 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Complete Periodic Catalogue</title>
+    <title>Interactive Periodic Table</title>
     <style>
-        /* --- General Styling --- */
+        /* --- General Layout --- */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f7f6;
-            color: #333;
+            background-color: #1a1a1a; /* Dark mode for better contrast */
+            color: #ecf0f1;
             margin: 0;
-            padding: 40px;
+            padding: 20px;
         }
 
-        h1 { text-align: center; color: #2c3e50; margin-bottom: 10px; }
-        p.subtitle { text-align: center; color: #7f8c8d; margin-bottom: 30px; }
+        h1 { text-align: center; margin-bottom: 5px; }
+        p.subtitle { text-align: center; color: #95a5a6; margin-bottom: 20px; }
 
-        /* --- Search Bar Styling --- */
+        /* --- Search Bar --- */
         .search-container {
-            max-width: 600px;
-            margin: 0 auto 40px auto;
-            position: relative;
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
         }
-
+        
         #searchInput {
             width: 100%;
-            padding: 15px 20px;
-            font-size: 1.1rem;
-            border: 2px solid #ddd;
-            border-radius: 30px;
+            max-width: 400px;
+            padding: 12px 20px;
+            border-radius: 25px;
+            border: none;
+            background: #333;
+            color: white;
+            font-size: 1rem;
             outline: none;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
 
-        #searchInput:focus {
-            border-color: #3498db;
-            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.2);
+        /* --- Periodic Table Grid --- */
+        .periodic-table-wrapper {
+            overflow-x: auto; /* Allows scrolling on mobile */
+            padding-bottom: 20px;
         }
 
-        /* --- Grid Layout --- */
-        .catalogue {
+        .periodic-table {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 15px;
-            max-width: 1400px;
+            grid-template-columns: repeat(18, 60px); /* 18 fixed columns */
+            grid-template-rows: repeat(10, 60px);    /* 7 main rows + 3 spacing/extra */
+            gap: 4px;
+            width: max-content;
             margin: 0 auto;
         }
 
-        /* --- Card Styling --- */
-        .element-card {
-            background: white;
-            border-radius: 10px;
-            padding: 15px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.08);
-            transition: transform 0.2s;
-            position: relative;
+        /* --- Element Card Styling --- */
+        .element {
+            background: #2c3e50;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
             cursor: pointer;
-            border-top: 5px solid #ccc;
+            transition: transform 0.2s, background 0.2s, z-index 0.2s;
+            position: relative;
+            user-select: none;
         }
 
-        .element-card:hover { transform: translateY(-3px); }
+        /* Hover Effect: Scale up and sit on top */
+        .element:hover {
+            transform: scale(1.5);
+            z-index: 10;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+            border-color: #fff;
+        }
 
-        .number { font-size: 0.8rem; color: #999; position: absolute; top: 10px; left: 10px; }
-        .mass { font-size: 0.75rem; color: #999; position: absolute; top: 10px; right: 10px; }
-        
+        /* Dim elements when searching */
+        .element.dimmed {
+            opacity: 0.1;
+            pointer-events: none;
+        }
+
+        .at-num {
+            font-size: 8px;
+            position: absolute;
+            top: 2px;
+            left: 3px;
+            color: #bdc3c7;
+        }
+
         .symbol {
-            font-size: 2.5rem;
-            font-weight: 700;
-            text-align: center;
-            margin-top: 20px;
-            color: #34495e;
+            font-size: 16px;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
         }
 
         .name {
+            font-size: 7px;
             text-align: center;
-            font-weight: 600;
-            font-size: 1rem;
-            margin-bottom: 2px;
-            white-space: nowrap;
             overflow: hidden;
+            white-space: nowrap;
+            width: 90%;
             text-overflow: ellipsis;
         }
 
-        .cat-name {
-            text-align: center;
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            color: #aaa;
-            letter-spacing: 0.5px;
+        /* --- Color Categories (Subtle Gradients) --- */
+        .cat-alkali { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+        .cat-alkaline { background: linear-gradient(135deg, #e67e22, #d35400); }
+        .cat-transition { background: linear-gradient(135deg, #34495e, #2c3e50); }
+        .cat-post-trans { background: linear-gradient(135deg, #3498db, #2980b9); }
+        .cat-metalloid { background: linear-gradient(135deg, #1abc9c, #16a085); }
+        .cat-non-metal { background: linear-gradient(135deg, #2ecc71, #27ae60); }
+        .cat-halogen { background: linear-gradient(135deg, #f1c40f, #f39c12); color: #333; }
+        .cat-noble { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
+        .cat-lanthanide { background: linear-gradient(135deg, #ff9ff3, #f368e0); color: #333; }
+        .cat-actinide { background: linear-gradient(135deg, #ffcccc, #ffaf40); color: #333; }
+
+        /* Placeholders for Lanthanides/Actinides labels in main table */
+        .placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: #7f8c8d;
+            border: 1px dashed #555;
+            border-radius: 4px;
         }
 
-        /* --- Dynamic Categories Colors --- */
-        .c-non-metal { border-color: #2ecc71; } .c-non-metal .symbol { color: #27ae60; }
-        .c-noble-gas { border-color: #9b59b6; } .c-noble-gas .symbol { color: #8e44ad; }
-        .c-alkali { border-color: #e74c3c; } .c-alkali .symbol { color: #c0392b; }
-        .c-alkaline-earth { border-color: #e67e22; } .c-alkaline-earth .symbol { color: #d35400; }
-        .c-metalloid { border-color: #1abc9c; } .c-metalloid .symbol { color: #16a085; }
-        .c-halogen { border-color: #f1c40f; } .c-halogen .symbol { color: #f39c12; }
-        .c-transition { border-color: #34495e; } .c-transition .symbol { color: #2c3e50; }
-        .c-post-transition { border-color: #3498db; } .c-post-transition .symbol { color: #2980b9; }
-        .c-lanthanide { border-color: #ff9ff3; } .c-lanthanide .symbol { color: #ff6b6b; }
-        .c-actinide { border-color: #ffcccc; } .c-actinide .symbol { color: #ff9f43; }
-
+        /* Responsive note */
+        @media (max-width: 800px) {
+            h1 { font-size: 1.5rem; }
+        }
     </style>
 </head>
 <body>
+    
+    
 
-    <h1>Complete Element Catalogue</h1>
-    <p class="subtitle">Search 118 elements by name, symbol, or atomic number</p>
+[Image of Periodic Table of Elements]
+
+
+    <h1>Interactive Periodic Table</h1>
+    <p class="subtitle">Scroll horizontally to view the full table</p>
 
     <div class="search-container">
-        <input type="text" id="searchInput" placeholder="Type to search (e.g., 'Gold', 'Au', '79')..." onkeyup="filterElements()">
+        <input type="text" id="searchInput" placeholder="Highlight element (e.g. 'Carbon', 'Au')..." onkeyup="filterElements()">
     </div>
 
-    <div class="catalogue" id="gridContainer">
+    <div class="periodic-table-wrapper">
+        <div class="periodic-table" id="tableGrid">
+            <div class="placeholder" style="grid-column: 3; grid-row: 6;">57-71</div>
+            <div class="placeholder" style="grid-column: 3; grid-row: 7;">89-103</div>
         </div>
+    </div>
 
     <script>
-        // --- 1. The Data (All 118 Elements) ---
-        // Format: [Number, Symbol, Name, Mass, CategoryClass, CategoryDisplayName]
-        const elementsData = [
-            [1, "H", "Hydrogen", "1.008", "c-non-metal", "Non-metal"],
-            [2, "He", "Helium", "4.0026", "c-noble-gas", "Noble Gas"],
-            [3, "Li", "Lithium", "6.94", "c-alkali", "Alkali Metal"],
-            [4, "Be", "Beryllium", "9.0122", "c-alkaline-earth", "Alkaline Earth"],
-            [5, "B", "Boron", "10.81", "c-metalloid", "Metalloid"],
-            [6, "C", "Carbon", "12.011", "c-non-metal", "Non-metal"],
-            [7, "N", "Nitrogen", "14.007", "c-non-metal", "Non-metal"],
-            [8, "O", "Oxygen", "15.999", "c-non-metal", "Non-metal"],
-            [9, "F", "Fluorine", "18.998", "c-halogen", "Halogen"],
-            [10, "Ne", "Neon", "20.180", "c-noble-gas", "Noble Gas"],
-            [11, "Na", "Sodium", "22.990", "c-alkali", "Alkali Metal"],
-            [12, "Mg", "Magnesium", "24.305", "c-alkaline-earth", "Alkaline Earth"],
-            [13, "Al", "Aluminium", "26.982", "c-post-transition", "Post-transition"],
-            [14, "Si", "Silicon", "28.085", "c-metalloid", "Metalloid"],
-            [15, "P", "Phosphorus", "30.974", "c-non-metal", "Non-metal"],
-            [16, "S", "Sulfur", "32.06", "c-non-metal", "Non-metal"],
-            [17, "Cl", "Chlorine", "35.45", "c-halogen", "Halogen"],
-            [18, "Ar", "Argon", "39.948", "c-noble-gas", "Noble Gas"],
-            [19, "K", "Potassium", "39.098", "c-alkali", "Alkali Metal"],
-            [20, "Ca", "Calcium", "40.078", "c-alkaline-earth", "Alkaline Earth"],
-            [21, "Sc", "Scandium", "44.956", "c-transition", "Transition Metal"],
-            [22, "Ti", "Titanium", "47.867", "c-transition", "Transition Metal"],
-            [23, "V", "Vanadium", "50.942", "c-transition", "Transition Metal"],
-            [24, "Cr", "Chromium", "51.996", "c-transition", "Transition Metal"],
-            [25, "Mn", "Manganese", "54.938", "c-transition", "Transition Metal"],
-            [26, "Fe", "Iron", "55.845", "c-transition", "Transition Metal"],
-            [27, "Co", "Cobalt", "58.933", "c-transition", "Transition Metal"],
-            [28, "Ni", "Nickel", "58.693", "c-transition", "Transition Metal"],
-            [29, "Cu", "Copper", "63.546", "c-transition", "Transition Metal"],
-            [30, "Zn", "Zinc", "65.38", "c-transition", "Transition Metal"],
-            [31, "Ga", "Gallium", "69.723", "c-post-transition", "Post-transition"],
-            [32, "Ge", "Germanium", "72.630", "c-metalloid", "Metalloid"],
-            [33, "As", "Arsenic", "74.922", "c-metalloid", "Metalloid"],
-            [34, "Se", "Selenium", "78.96", "c-non-metal", "Non-metal"],
-            [35, "Br", "Bromine", "79.904", "c-halogen", "Halogen"],
-            [36, "Kr", "Krypton", "83.798", "c-noble-gas", "Noble Gas"],
-            [37, "Rb", "Rubidium", "85.468", "c-alkali", "Alkali Metal"],
-            [38, "Sr", "Strontium", "87.62", "c-alkaline-earth", "Alkaline Earth"],
-            [39, "Y", "Yttrium", "88.906", "c-transition", "Transition Metal"],
-            [40, "Zr", "Zirconium", "91.224", "c-transition", "Transition Metal"],
-            [41, "Nb", "Niobium", "92.906", "c-transition", "Transition Metal"],
-            [42, "Mo", "Molybdenum", "95.95", "c-transition", "Transition Metal"],
-            [43, "Tc", "Technetium", "(98)", "c-transition", "Transition Metal"],
-            [44, "Ru", "Ruthenium", "101.07", "c-transition", "Transition Metal"],
-            [45, "Rh", "Rhodium", "102.91", "c-transition", "Transition Metal"],
-            [46, "Pd", "Palladium", "106.42", "c-transition", "Transition Metal"],
-            [47, "Ag", "Silver", "107.87", "c-transition", "Transition Metal"],
-            [48, "Cd", "Cadmium", "112.41", "c-transition", "Transition Metal"],
-            [49, "In", "Indium", "114.82", "c-post-transition", "Post-transition"],
-            [50, "Sn", "Tin", "118.71", "c-post-transition", "Post-transition"],
-            [51, "Sb", "Antimony", "121.76", "c-metalloid", "Metalloid"],
-            [52, "Te", "Tellurium", "127.60", "c-metalloid", "Metalloid"],
-            [53, "I", "Iodine", "126.90", "c-halogen", "Halogen"],
-            [54, "Xe", "Xenon", "131.29", "c-noble-gas", "Noble Gas"],
-            [55, "Cs", "Caesium", "132.91", "c-alkali", "Alkali Metal"],
-            [56, "Ba", "Barium", "137.33", "c-alkaline-earth", "Alkaline Earth"],
-            [57, "La", "Lanthanum", "138.91", "c-lanthanide", "Lanthanide"],
-            [58, "Ce", "Cerium", "140.12", "c-lanthanide", "Lanthanide"],
-            [59, "Pr", "Praseodymium", "140.91", "c-lanthanide", "Lanthanide"],
-            [60, "Nd", "Neodymium", "144.24", "c-lanthanide", "Lanthanide"],
-            [61, "Pm", "Promethium", "(145)", "c-lanthanide", "Lanthanide"],
-            [62, "Sm", "Samarium", "150.36", "c-lanthanide", "Lanthanide"],
-            [63, "Eu", "Europium", "151.96", "c-lanthanide", "Lanthanide"],
-            [64, "Gd", "Gadolinium", "157.25", "c-lanthanide", "Lanthanide"],
-            [65, "Tb", "Terbium", "158.93", "c-lanthanide", "Lanthanide"],
-            [66, "Dy", "Dysprosium", "162.50", "c-lanthanide", "Lanthanide"],
-            [67, "Ho", "Holmium", "164.93", "c-lanthanide", "Lanthanide"],
-            [68, "Er", "Erbium", "167.26", "c-lanthanide", "Lanthanide"],
-            [69, "Tm", "Thulium", "168.93", "c-lanthanide", "Lanthanide"],
-            [70, "Yb", "Ytterbium", "173.05", "c-lanthanide", "Lanthanide"],
-            [71, "Lu", "Lutetium", "174.97", "c-lanthanide", "Lanthanide"],
-            [72, "Hf", "Hafnium", "178.49", "c-transition", "Transition Metal"],
-            [73, "Ta", "Tantalum", "180.95", "c-transition", "Transition Metal"],
-            [74, "W", "Tungsten", "183.84", "c-transition", "Transition Metal"],
-            [75, "Re", "Rhenium", "186.21", "c-transition", "Transition Metal"],
-            [76, "Os", "Osmium", "190.23", "c-transition", "Transition Metal"],
-            [77, "Ir", "Iridium", "192.22", "c-transition", "Transition Metal"],
-            [78, "Pt", "Platinum", "195.08", "c-transition", "Transition Metal"],
-            [79, "Au", "Gold", "196.97", "c-transition", "Transition Metal"],
-            [80, "Hg", "Mercury", "200.59", "c-transition", "Transition Metal"],
-            [81, "Tl", "Thallium", "204.38", "c-post-transition", "Post-transition"],
-            [82, "Pb", "Lead", "207.2", "c-post-transition", "Post-transition"],
-            [83, "Bi", "Bismuth", "208.98", "c-post-transition", "Post-transition"],
-            [84, "Po", "Polonium", "(209)", "c-post-transition", "Post-transition"],
-            [85, "At", "Astatine", "(210)", "c-halogen", "Halogen"],
-            [86, "Rn", "Radon", "(222)", "c-noble-gas", "Noble Gas"],
-            [87, "Fr", "Francium", "(223)", "c-alkali", "Alkali Metal"],
-            [88, "Ra", "Radium", "(226)", "c-alkaline-earth", "Alkaline Earth"],
-            [89, "Ac", "Actinium", "(227)", "c-actinide", "Actinide"],
-            [90, "Th", "Thorium", "232.04", "c-actinide", "Actinide"],
-            [91, "Pa", "Protactinium", "231.04", "c-actinide", "Actinide"],
-            [92, "U", "Uranium", "238.03", "c-actinide", "Actinide"],
-            [93, "Np", "Neptunium", "(237)", "c-actinide", "Actinide"],
-            [94, "Pu", "Plutonium", "(244)", "c-actinide", "Actinide"],
-            [95, "Am", "Americium", "(243)", "c-actinide", "Actinide"],
-            [96, "Cm", "Curium", "(247)", "c-actinide", "Actinide"],
-            [97, "Bk", "Berkelium", "(247)", "c-actinide", "Actinide"],
-            [98, "Cf", "Californium", "(251)", "c-actinide", "Actinide"],
-            [99, "Es", "Einsteinium", "(252)", "c-actinide", "Actinide"],
-            [100, "Fm", "Fermium", "(257)", "c-actinide", "Actinide"],
-            [101, "Md", "Mendelevium", "(258)", "c-actinide", "Actinide"],
-            [102, "No", "Nobelium", "(259)", "c-actinide", "Actinide"],
-            [103, "Lr", "Lawrencium", "(266)", "c-actinide", "Actinide"],
-            [104, "Rf", "Rutherfordium", "(267)", "c-transition", "Transition Metal"],
-            [105, "Db", "Dubnium", "(268)", "c-transition", "Transition Metal"],
-            [106, "Sg", "Seaborgium", "(269)", "c-transition", "Transition Metal"],
-            [107, "Bh", "Bohrium", "(270)", "c-transition", "Transition Metal"],
-            [108, "Hs", "Hassium", "(277)", "c-transition", "Transition Metal"],
-            [109, "Mt", "Meitnerium", "(278)", "c-transition", "Transition Metal"],
-            [110, "Ds", "Darmstadtium", "(281)", "c-transition", "Transition Metal"],
-            [111, "Rg", "Roentgenium", "(282)", "c-transition", "Transition Metal"],
-            [112, "Cn", "Copernicium", "(285)", "c-transition", "Transition Metal"],
-            [113, "Nh", "Nihonium", "(286)", "c-post-transition", "Post-transition"],
-            [114, "Fl", "Flerovium", "(289)", "c-post-transition", "Post-transition"],
-            [115, "Mc", "Moscovium", "(290)", "c-post-transition", "Post-transition"],
-            [116, "Lv", "Livermorium", "(293)", "c-post-transition", "Post-transition"],
-            [117, "Ts", "Tennessine", "(294)", "c-halogen", "Halogen"],
-            [118, "Og", "Oganesson", "(294)", "c-noble-gas", "Noble Gas"]
+        // --- DATA: [Number, Symbol, Name, Category Class] ---
+        const rawData = [
+            [1,"H","Hydrogen","cat-non-metal"],
+            [2,"He","Helium","cat-noble"],
+            [3,"Li","Lithium","cat-alkali"],
+            [4,"Be","Beryllium","cat-alkaline"],
+            [5,"B","Boron","cat-metalloid"],
+            [6,"C","Carbon","cat-non-metal"],
+            [7,"N","Nitrogen","cat-non-metal"],
+            [8,"O","Oxygen","cat-non-metal"],
+            [9,"F","Fluorine","cat-halogen"],
+            [10,"Ne","Neon","cat-noble"],
+            [11,"Na","Sodium","cat-alkali"],
+            [12,"Mg","Magnesium","cat-alkaline"],
+            [13,"Al","Aluminium","cat-post-trans"],
+            [14,"Si","Silicon","cat-metalloid"],
+            [15,"P","Phosphorus","cat-non-metal"],
+            [16,"S","Sulfur","cat-non-metal"],
+            [17,"Cl","Chlorine","cat-halogen"],
+            [18,"Ar","Argon","cat-noble"],
+            [19,"K","Potassium","cat-alkali"],
+            [20,"Ca","Calcium","cat-alkaline"],
+            [21,"Sc","Scandium","cat-transition"],
+            [22,"Ti","Titanium","cat-transition"],
+            [23,"V","Vanadium","cat-transition"],
+            [24,"Cr","Chromium","cat-transition"],
+            [25,"Mn","Manganese","cat-transition"],
+            [26,"Fe","Iron","cat-transition"],
+            [27,"Co","Cobalt","cat-transition"],
+            [28,"Ni","Nickel","cat-transition"],
+            [29,"Cu","Copper","cat-transition"],
+            [30,"Zn","Zinc","cat-transition"],
+            [31,"Ga","Gallium","cat-post-trans"],
+            [32,"Ge","Germanium","cat-metalloid"],
+            [33,"As","Arsenic","cat-metalloid"],
+            [34,"Se","Selenium","cat-non-metal"],
+            [35,"Br","Bromine","cat-halogen"],
+            [36,"Kr","Krypton","cat-noble"],
+            [37,"Rb","Rubidium","cat-alkali"],
+            [38,"Sr","Strontium","cat-alkaline"],
+            [39,"Y","Yttrium","cat-transition"],
+            [40,"Zr","Zirconium","cat-transition"],
+            [41,"Nb","Niobium","cat-transition"],
+            [42,"Mo","Molybdenum","cat-transition"],
+            [43,"Tc","Technetium","cat-transition"],
+            [44,"Ru","Ruthenium","cat-transition"],
+            [45,"Rh","Rhodium","cat-transition"],
+            [46,"Pd","Palladium","cat-transition"],
+            [47,"Ag","Silver","cat-transition"],
+            [48,"Cd","Cadmium","cat-transition"],
+            [49,"In","Indium","cat-post-trans"],
+            [50,"Sn","Tin","cat-post-trans"],
+            [51,"Sb","Antimony","cat-metalloid"],
+            [52,"Te","Tellurium","cat-metalloid"],
+            [53,"I","Iodine","cat-halogen"],
+            [54,"Xe","Xenon","cat-noble"],
+            [55,"Cs","Caesium","cat-alkali"],
+            [56,"Ba","Barium","cat-alkaline"],
+            // 57-71 Lanthanides
+            [57,"La","Lanthanum","cat-lanthanide"],
+            [58,"Ce","Cerium","cat-lanthanide"],
+            [59,"Pr","Praseodymium","cat-lanthanide"],
+            [60,"Nd","Neodymium","cat-lanthanide"],
+            [61,"Pm","Promethium","cat-lanthanide"],
+            [62,"Sm","Samarium","cat-lanthanide"],
+            [63,"Eu","Europium","cat-lanthanide"],
+            [64,"Gd","Gadolinium","cat-lanthanide"],
+            [65,"Tb","Terbium","cat-lanthanide"],
+            [66,"Dy","Dysprosium","cat-lanthanide"],
+            [67,"Ho","Holmium","cat-lanthanide"],
+            [68,"Er","Erbium","cat-lanthanide"],
+            [69,"Tm","Thulium","cat-lanthanide"],
+            [70,"Yb","Ytterbium","cat-lanthanide"],
+            [71,"Lu","Lutetium","cat-lanthanide"],
+            // Continue Main Block
+            [72,"Hf","Hafnium","cat-transition"],
+            [73,"Ta","Tantalum","cat-transition"],
+            [74,"W","Tungsten","cat-transition"],
+            [75,"Re","Rhenium","cat-transition"],
+            [76,"Os","Osmium","cat-transition"],
+            [77,"Ir","Iridium","cat-transition"],
+            [78,"Pt","Platinum","cat-transition"],
+            [79,"Au","Gold","cat-transition"],
+            [80,"Hg","Mercury","cat-transition"],
+            [81,"Tl","Thallium","cat-post-trans"],
+            [82,"Pb","Lead","cat-post-trans"],
+            [83,"Bi","Bismuth","cat-post-trans"],
+            [84,"Po","Polonium","cat-post-trans"],
+            [85,"At","Astatine","cat-halogen"],
+            [86,"Rn","Radon","cat-noble"],
+            [87,"Fr","Francium","cat-alkali"],
+            [88,"Ra","Radium","cat-alkaline"],
+            // 89-103 Actinides
+            [89,"Ac","Actinium","cat-actinide"],
+            [90,"Th","Thorium","cat-actinide"],
+            [91,"Pa","Protactinium","cat-actinide"],
+            [92,"U","Uranium","cat-actinide"],
+            [93,"Np","Neptunium","cat-actinide"],
+            [94,"Pu","Plutonium","cat-actinide"],
+            [95,"Am","Americium","cat-actinide"],
+            [96,"Cm","Curium","cat-actinide"],
+            [97,"Bk","Berkelium","cat-actinide"],
+            [98,"Cf","Californium","cat-actinide"],
+            [99,"Es","Einsteinium","cat-actinide"],
+            [100,"Fm","Fermium","cat-actinide"],
+            [101,"Md","Mendelevium","cat-actinide"],
+            [102,"No","Nobelium","cat-actinide"],
+            [103,"Lr","Lawrencium","cat-actinide"],
+            // Continue Main Block
+            [104,"Rf","Rutherfordium","cat-transition"],
+            [105,"Db","Dubnium","cat-transition"],
+            [106,"Sg","Seaborgium","cat-transition"],
+            [107,"Bh","Bohrium","cat-transition"],
+            [108,"Hs","Hassium","cat-transition"],
+            [109,"Mt","Meitnerium","cat-transition"],
+            [110,"Ds","Darmstadtium","cat-transition"],
+            [111,"Rg","Roentgenium","cat-transition"],
+            [112,"Cn","Copernicium","cat-transition"],
+            [113,"Nh","Nihonium","cat-post-trans"],
+            [114,"Fl","Flerovium","cat-post-trans"],
+            [115,"Mc","Moscovium","cat-post-trans"],
+            [116,"Lv","Livermorium","cat-post-trans"],
+            [117,"Ts","Tennessine","cat-halogen"],
+            [118,"Og","Oganesson","cat-noble"]
         ];
 
-        // --- 2. Function to Render Elements ---
-        function renderElements(list) {
-            const container = document.getElementById('gridContainer');
-            container.innerHTML = ''; // Clear existing content
+        // --- POSITION LOGIC ---
+        // This function determines where each element sits on the 18x10 grid
+        function getPosition(atomicNumber) {
+            const n = atomicNumber;
+            // Row 1
+            if(n===1) return [1,1];
+            if(n===2) return [1,18];
+            // Row 2
+            if(n>=3 && n<=4) return [2, n-2];
+            if(n>=5 && n<=10) return [2, n+8];
+            // Row 3
+            if(n>=11 && n<=12) return [3, n-10];
+            if(n>=13 && n<=18) return [3, n+2];
+            // Row 4
+            if(n>=19 && n<=36) return [4, n-18];
+            // Row 5
+            if(n>=37 && n<=54) return [5, n-36];
+            // Row 6 (includes split for Lanthanides)
+            if(n>=55 && n<=56) return [6, n-54];
+            if(n>=72 && n<=86) return [6, n-68]; // Offset for gap
+            // Row 7 (includes split for Actinides)
+            if(n>=87 && n<=88) return [7, n-86];
+            if(n>=104 && n<=118) return [7, n-100]; // Offset for gap
+            
+            // Lanthanides (Row 9, offset 3)
+            if(n>=57 && n<=71) return [9, n-54];
+            // Actinides (Row 10, offset 3)
+            if(n>=89 && n<=103) return [10, n-86];
 
-            list.forEach(el => {
-                const [num, symbol, name, mass, catClass, catName] = el;
-                
-                const card = document.createElement('div');
-                card.className = `element-card ${catClass}`;
-                card.innerHTML = `
-                    <span class="number">${num}</span>
-                    <span class="mass">${mass}</span>
-                    <div class="symbol">${symbol}</div>
-                    <div class="name">${name}</div>
-                    <div class="cat-name">${catName}</div>
+            return [1,1]; // Fallback
+        }
+
+        function renderTable() {
+            const container = document.getElementById('tableGrid');
+            
+            // Generate Element Cards
+            rawData.forEach(data => {
+                const [num, sym, name, cat] = data;
+                const [row, col] = getPosition(num);
+
+                const el = document.createElement('div');
+                el.className = `element ${cat}`;
+                el.style.gridRow = row;
+                el.style.gridColumn = col;
+                // Add data attributes for search
+                el.dataset.name = name.toLowerCase();
+                el.dataset.sym = sym.toLowerCase();
+                el.dataset.num = num;
+
+                el.innerHTML = `
+                    <span class="at-num">${num}</span>
+                    <span class="symbol">${sym}</span>
+                    <span class="name">${name}</span>
                 `;
-                container.appendChild(card);
+                
+                // Click alert (Simple interactivity)
+                el.onclick = () => alert(`${name} (${sym})\nAtomic Number: ${num}\nCategory: ${cat.replace('cat-','').toUpperCase()}`);
+                
+                container.appendChild(el);
             });
         }
 
-        // --- 3. Filter Function ---
         function filterElements() {
             const query = document.getElementById('searchInput').value.toLowerCase();
-            
-            const filtered = elementsData.filter(el => {
-                const [num, symbol, name] = el;
-                return name.toLowerCase().includes(query) || 
-                       symbol.toLowerCase().includes(query) || 
-                       num.toString().includes(query);
-            });
+            const elements = document.querySelectorAll('.element');
 
-            renderElements(filtered);
+            elements.forEach(el => {
+                const match = el.dataset.name.includes(query) || 
+                              el.dataset.sym.includes(query) || 
+                              el.dataset.num === query;
+                
+                // Toggle "dimmed" class instead of removing from DOM to keep table shape
+                if (query === "") {
+                    el.classList.remove('dimmed');
+                } else if (match) {
+                    el.classList.remove('dimmed');
+                    el.style.transform = "scale(1.2)";
+                    el.style.zIndex = "100";
+                } else {
+                    el.classList.add('dimmed');
+                    el.style.transform = "scale(1)";
+                    el.style.zIndex = "1";
+                }
+            });
         }
 
-        // --- 4. Initial Load ---
-        renderElements(elementsData);
+        // Run
+        renderTable();
 
     </script>
 </body>
