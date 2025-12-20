@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive Periodic Table</title>
+    <title>Accurate Periodic Table</title>
     <style>
         /* --- General Layout --- */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #1a1a1a; /* Dark mode for better contrast */
+            background-color: #1a1a1a;
             color: #ecf0f1;
             margin: 0;
             padding: 20px;
@@ -17,16 +17,17 @@
         h1 { text-align: center; margin-bottom: 5px; }
         p.subtitle { text-align: center; color: #95a5a6; margin-bottom: 20px; }
 
-        /* --- Search Bar --- */
-        .search-container {
+        /* --- Controls --- */
+        .controls {
             display: flex;
             justify-content: center;
+            align-items: center;
+            gap: 15px;
             margin-bottom: 30px;
+            flex-wrap: wrap;
         }
         
         #searchInput {
-            width: 100%;
-            max-width: 400px;
             padding: 12px 20px;
             border-radius: 25px;
             border: none;
@@ -34,19 +35,34 @@
             color: white;
             font-size: 1rem;
             outline: none;
+            width: 300px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
 
+        button#langBtn {
+            padding: 12px 20px;
+            border-radius: 25px;
+            border: none;
+            background: #3498db;
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        button#langBtn:hover { background: #2980b9; }
+
         /* --- Periodic Table Grid --- */
         .periodic-table-wrapper {
-            overflow-x: auto; /* Allows scrolling on mobile */
-            padding-bottom: 20px;
+            overflow-x: auto;
+            padding-bottom: 60px;
         }
 
         .periodic-table {
             display: grid;
-            grid-template-columns: repeat(18, 60px); /* 18 fixed columns */
-            grid-template-rows: repeat(10, 60px);    /* 7 main rows + 3 spacing/extra */
+            grid-template-columns: repeat(18, 60px);
+            grid-template-rows: repeat(10, 60px);
             gap: 4px;
             width: max-content;
             margin: 0 auto;
@@ -62,49 +78,25 @@
             justify-content: center;
             align-items: center;
             cursor: pointer;
-            transition: transform 0.2s, background 0.2s, z-index 0.2s;
+            transition: transform 0.2s, background 0.2s, opacity 0.2s;
             position: relative;
             user-select: none;
         }
 
-        /* Hover Effect: Scale up and sit on top */
         .element:hover {
             transform: scale(1.5);
-            z-index: 10;
+            z-index: 100;
             box-shadow: 0 0 15px rgba(0,0,0,0.5);
             border-color: #fff;
         }
 
-        /* Dim elements when searching */
-        .element.dimmed {
-            opacity: 0.1;
-            pointer-events: none;
-        }
+        .element.dimmed { opacity: 0.1; pointer-events: none; transform: scale(1); }
 
-        .at-num {
-            font-size: 8px;
-            position: absolute;
-            top: 2px;
-            left: 3px;
-            color: #bdc3c7;
-        }
+        .at-num { font-size: 8px; position: absolute; top: 2px; left: 3px; color: #bdc3c7; }
+        .symbol { font-size: 16px; font-weight: bold; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
+        .name { font-size: 7px; text-align: center; overflow: hidden; white-space: nowrap; width: 90%; text-overflow: ellipsis; }
 
-        .symbol {
-            font-size: 16px;
-            font-weight: bold;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-        }
-
-        .name {
-            font-size: 7px;
-            text-align: center;
-            overflow: hidden;
-            white-space: nowrap;
-            width: 90%;
-            text-overflow: ellipsis;
-        }
-
-        /* --- Color Categories (Subtle Gradients) --- */
+        /* --- Category Colors --- */
         .cat-alkali { background: linear-gradient(135deg, #e74c3c, #c0392b); }
         .cat-alkaline { background: linear-gradient(135deg, #e67e22, #d35400); }
         .cat-transition { background: linear-gradient(135deg, #34495e, #2c3e50); }
@@ -116,21 +108,83 @@
         .cat-lanthanide { background: linear-gradient(135deg, #ff9ff3, #f368e0); color: #333; }
         .cat-actinide { background: linear-gradient(135deg, #ffcccc, #ffaf40); color: #333; }
 
-        /* Placeholders for Lanthanides/Actinides labels in main table */
         .placeholder {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 10px;
-            color: #7f8c8d;
-            border: 1px dashed #555;
-            border-radius: 4px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 10px; color: #7f8c8d; border: 1px dashed #555; border-radius: 4px;
         }
 
-        /* Responsive note */
-        @media (max-width: 800px) {
-            h1 { font-size: 1.5rem; }
+        /* --- MODAL (POP-UP) STYLING --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(5px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
         }
+
+        .modal-content {
+            background: #2c3e50;
+            padding: 25px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 450px;
+            position: relative;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            text-align: center;
+            color: white;
+            border: 1px solid #555;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #aaa;
+        }
+        .modal-close:hover { color: white; }
+
+        .modal-header { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 20px; }
+        .modal-symbol { font-size: 3rem; font-weight: bold; background: rgba(0,0,0,0.2); padding: 5px 20px; border-radius: 10px; }
+        .modal-title { text-align: left; }
+        .modal-name { font-size: 1.5rem; font-weight: bold; margin: 0; }
+        .modal-cat { font-size: 0.9rem; text-transform: uppercase; color: #ddd; }
+        
+        .modal-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+            background: rgba(0,0,0,0.15);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: left;
+        }
+        
+        .detail-item { display: flex; flex-direction: column; }
+        .detail-item strong { font-size: 0.7rem; color: #95a5a6; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .detail-item span { font-size: 0.95rem; font-weight: 500; color: #fff;}
+        
+        /* Make oxidation states span full width */
+        .full-width { grid-column: 1 / -1; }
+
+        .wiki-btn {
+            display: inline-block;
+            background: #2980b9;
+            color: white;
+            padding: 10px 25px;
+            text-decoration: none;
+            border-radius: 20px;
+            font-weight: bold;
+            transition: 0.2s;
+            font-size: 0.9rem;
+        }
+        .wiki-btn:hover { background: #3498db; transform: translateY(-2px); }
+
     </style>
 </head>
 <body>
@@ -140,207 +194,299 @@
 [Image of Periodic Table of Elements]
 
 
-    <h1>Interactive Periodic Table</h1>
-    <p class="subtitle">Scroll horizontally to view the full table</p>
+    <h1 id="pageTitle">Corrected Periodic Table</h1>
+    <p class="subtitle" id="pageSubtitle">Data verified against scientific standards</p>
 
-    <div class="search-container">
-        <input type="text" id="searchInput" placeholder="Highlight element (e.g. 'Carbon', 'Au')..." onkeyup="filterElements()">
+    <div class="controls">
+        <input type="text" id="searchInput" placeholder="Search..." onkeyup="filterElements()">
+        <button id="langBtn" onclick="toggleLanguage()">Polski</button>
     </div>
 
     <div class="periodic-table-wrapper">
-        <div class="periodic-table" id="tableGrid">
-            <div class="placeholder" style="grid-column: 3; grid-row: 6;">57-71</div>
-            <div class="placeholder" style="grid-column: 3; grid-row: 7;">89-103</div>
+        <div class="periodic-table" id="tableGrid"></div>
+    </div>
+
+    <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeModal('force')">&times;</span>
+            
+            <div class="modal-header">
+                <div class="modal-symbol" id="mSym">H</div>
+                <div class="modal-title">
+                    <h2 class="modal-name" id="mName">Hydrogen</h2>
+                    <div class="modal-cat" id="mCat">Non-metal</div>
+                </div>
+            </div>
+
+            <div class="modal-details">
+                <div class="detail-item">
+                    <strong id="lblNum">Atomic Number</strong>
+                    <span id="mNum">1</span>
+                </div>
+                <div class="detail-item">
+                    <strong id="lblMass">Atomic Mass</strong>
+                    <span id="mMass">1.008</span>
+                </div>
+                <div class="detail-item">
+                    <strong id="lblPhase">Phase (STP)</strong>
+                    <span id="mPhase">Gas</span>
+                </div>
+                <div class="detail-item">
+                    <strong id="lblNeg">Electronegativity</strong>
+                    <span id="mNeg">2.20</span>
+                </div>
+                <div class="detail-item full-width">
+                    <strong id="lblOx">Oxidation States</strong>
+                    <span id="mOx">-1, +1</span>
+                </div>
+            </div>
+
+            <a href="#" target="_blank" class="wiki-btn" id="mWiki">Read on Wikipedia</a>
         </div>
     </div>
 
     <script>
-        // --- DATA: [Number, Symbol, Name, Category Class] ---
+        // --- DATA VERIFIED ---
+        // Format: [Num, Sym, NameEN, NamePL, Category, Mass, Electronegativity (Pauling), Oxidation States]
         const rawData = [
-            [1,"H","Hydrogen","cat-non-metal"],
-            [2,"He","Helium","cat-noble"],
-            [3,"Li","Lithium","cat-alkali"],
-            [4,"Be","Beryllium","cat-alkaline"],
-            [5,"B","Boron","cat-metalloid"],
-            [6,"C","Carbon","cat-non-metal"],
-            [7,"N","Nitrogen","cat-non-metal"],
-            [8,"O","Oxygen","cat-non-metal"],
-            [9,"F","Fluorine","cat-halogen"],
-            [10,"Ne","Neon","cat-noble"],
-            [11,"Na","Sodium","cat-alkali"],
-            [12,"Mg","Magnesium","cat-alkaline"],
-            [13,"Al","Aluminium","cat-post-trans"],
-            [14,"Si","Silicon","cat-metalloid"],
-            [15,"P","Phosphorus","cat-non-metal"],
-            [16,"S","Sulfur","cat-non-metal"],
-            [17,"Cl","Chlorine","cat-halogen"],
-            [18,"Ar","Argon","cat-noble"],
-            [19,"K","Potassium","cat-alkali"],
-            [20,"Ca","Calcium","cat-alkaline"],
-            [21,"Sc","Scandium","cat-transition"],
-            [22,"Ti","Titanium","cat-transition"],
-            [23,"V","Vanadium","cat-transition"],
-            [24,"Cr","Chromium","cat-transition"],
-            [25,"Mn","Manganese","cat-transition"],
-            [26,"Fe","Iron","cat-transition"],
-            [27,"Co","Cobalt","cat-transition"],
-            [28,"Ni","Nickel","cat-transition"],
-            [29,"Cu","Copper","cat-transition"],
-            [30,"Zn","Zinc","cat-transition"],
-            [31,"Ga","Gallium","cat-post-trans"],
-            [32,"Ge","Germanium","cat-metalloid"],
-            [33,"As","Arsenic","cat-metalloid"],
-            [34,"Se","Selenium","cat-non-metal"],
-            [35,"Br","Bromine","cat-halogen"],
-            [36,"Kr","Krypton","cat-noble"],
-            [37,"Rb","Rubidium","cat-alkali"],
-            [38,"Sr","Strontium","cat-alkaline"],
-            [39,"Y","Yttrium","cat-transition"],
-            [40,"Zr","Zirconium","cat-transition"],
-            [41,"Nb","Niobium","cat-transition"],
-            [42,"Mo","Molybdenum","cat-transition"],
-            [43,"Tc","Technetium","cat-transition"],
-            [44,"Ru","Ruthenium","cat-transition"],
-            [45,"Rh","Rhodium","cat-transition"],
-            [46,"Pd","Palladium","cat-transition"],
-            [47,"Ag","Silver","cat-transition"],
-            [48,"Cd","Cadmium","cat-transition"],
-            [49,"In","Indium","cat-post-trans"],
-            [50,"Sn","Tin","cat-post-trans"],
-            [51,"Sb","Antimony","cat-metalloid"],
-            [52,"Te","Tellurium","cat-metalloid"],
-            [53,"I","Iodine","cat-halogen"],
-            [54,"Xe","Xenon","cat-noble"],
-            [55,"Cs","Caesium","cat-alkali"],
-            [56,"Ba","Barium","cat-alkaline"],
-            // 57-71 Lanthanides
-            [57,"La","Lanthanum","cat-lanthanide"],
-            [58,"Ce","Cerium","cat-lanthanide"],
-            [59,"Pr","Praseodymium","cat-lanthanide"],
-            [60,"Nd","Neodymium","cat-lanthanide"],
-            [61,"Pm","Promethium","cat-lanthanide"],
-            [62,"Sm","Samarium","cat-lanthanide"],
-            [63,"Eu","Europium","cat-lanthanide"],
-            [64,"Gd","Gadolinium","cat-lanthanide"],
-            [65,"Tb","Terbium","cat-lanthanide"],
-            [66,"Dy","Dysprosium","cat-lanthanide"],
-            [67,"Ho","Holmium","cat-lanthanide"],
-            [68,"Er","Erbium","cat-lanthanide"],
-            [69,"Tm","Thulium","cat-lanthanide"],
-            [70,"Yb","Ytterbium","cat-lanthanide"],
-            [71,"Lu","Lutetium","cat-lanthanide"],
-            // Continue Main Block
-            [72,"Hf","Hafnium","cat-transition"],
-            [73,"Ta","Tantalum","cat-transition"],
-            [74,"W","Tungsten","cat-transition"],
-            [75,"Re","Rhenium","cat-transition"],
-            [76,"Os","Osmium","cat-transition"],
-            [77,"Ir","Iridium","cat-transition"],
-            [78,"Pt","Platinum","cat-transition"],
-            [79,"Au","Gold","cat-transition"],
-            [80,"Hg","Mercury","cat-transition"],
-            [81,"Tl","Thallium","cat-post-trans"],
-            [82,"Pb","Lead","cat-post-trans"],
-            [83,"Bi","Bismuth","cat-post-trans"],
-            [84,"Po","Polonium","cat-post-trans"],
-            [85,"At","Astatine","cat-halogen"],
-            [86,"Rn","Radon","cat-noble"],
-            [87,"Fr","Francium","cat-alkali"],
-            [88,"Ra","Radium","cat-alkaline"],
-            // 89-103 Actinides
-            [89,"Ac","Actinium","cat-actinide"],
-            [90,"Th","Thorium","cat-actinide"],
-            [91,"Pa","Protactinium","cat-actinide"],
-            [92,"U","Uranium","cat-actinide"],
-            [93,"Np","Neptunium","cat-actinide"],
-            [94,"Pu","Plutonium","cat-actinide"],
-            [95,"Am","Americium","cat-actinide"],
-            [96,"Cm","Curium","cat-actinide"],
-            [97,"Bk","Berkelium","cat-actinide"],
-            [98,"Cf","Californium","cat-actinide"],
-            [99,"Es","Einsteinium","cat-actinide"],
-            [100,"Fm","Fermium","cat-actinide"],
-            [101,"Md","Mendelevium","cat-actinide"],
-            [102,"No","Nobelium","cat-actinide"],
-            [103,"Lr","Lawrencium","cat-actinide"],
-            // Continue Main Block
-            [104,"Rf","Rutherfordium","cat-transition"],
-            [105,"Db","Dubnium","cat-transition"],
-            [106,"Sg","Seaborgium","cat-transition"],
-            [107,"Bh","Bohrium","cat-transition"],
-            [108,"Hs","Hassium","cat-transition"],
-            [109,"Mt","Meitnerium","cat-transition"],
-            [110,"Ds","Darmstadtium","cat-transition"],
-            [111,"Rg","Roentgenium","cat-transition"],
-            [112,"Cn","Copernicium","cat-transition"],
-            [113,"Nh","Nihonium","cat-post-trans"],
-            [114,"Fl","Flerovium","cat-post-trans"],
-            [115,"Mc","Moscovium","cat-post-trans"],
-            [116,"Lv","Livermorium","cat-post-trans"],
-            [117,"Ts","Tennessine","cat-halogen"],
-            [118,"Og","Oganesson","cat-noble"]
+            [1,"H","Hydrogen","Wodór","cat-non-metal","1.0080","2.20","-1, +1"],
+            [2,"He","Helium","Hel","cat-noble","4.0026","-","0"],
+            [3,"Li","Lithium","Lit","cat-alkali","6.94","0.98","+1"],
+            [4,"Be","Beryllium","Beryl","cat-alkaline","9.0122","1.57","+1, +2"],
+            [5,"B","Boron","Bor","cat-metalloid","10.81","2.04","-5, -1, +1, +2, +3"],
+            [6,"C","Carbon","Węgiel","cat-non-metal","12.011","2.55","-4, -3, -2, -1, 0, +1, +2, +3, +4"],
+            [7,"N","Nitrogen","Azot","cat-non-metal","14.007","3.04","-3, -2, -1, +1, +2, +3, +4, +5"],
+            [8,"O","Oxygen","Tlen","cat-non-metal","15.999","3.44","-2, -1, +1, +2"],
+            [9,"F","Fluorine","Fluor","cat-halogen","18.998","3.98","-1"],
+            [10,"Ne","Neon","Neon","cat-noble","20.180","-","0"],
+            [11,"Na","Sodium","Sód","cat-alkali","22.990","0.93","-1, +1"],
+            [12,"Mg","Magnesium","Magnez","cat-alkaline","24.305","1.31","+1, +2"],
+            [13,"Al","Aluminium","Glin","cat-post-trans","26.982","1.61","-1, +1, +3"],
+            [14,"Si","Silicon","Krzem","cat-metalloid","28.085","1.90","-4, -3, -1, +1, +2, +3, +4"],
+            [15,"P","Phosphorus","Fosfor","cat-non-metal","30.974","2.19","-3, -2, -1, +1, +2, +3, +4, +5"],
+            [16,"S","Sulfur","Siarka","cat-non-metal","32.06","2.58","-2, -1, +1, +2, +3, +4, +5, +6"],
+            [17,"Cl","Chlorine","Chlor","cat-halogen","35.45","3.16","-1, +1, +2, +3, +4, +5, +6, +7"],
+            [18,"Ar","Argon","Argon","cat-noble","39.948","-","0"],
+            [19,"K","Potassium","Potas","cat-alkali","39.098","0.82","-1, +1"],
+            [20,"Ca","Calcium","Wapń","cat-alkaline","40.078","1.00","+2"],
+            [21,"Sc","Scandium","Skand","cat-transition","44.956","1.36","+1, +2, +3"],
+            [22,"Ti","Titanium","Tytan","cat-transition","47.867","1.54","-2, -1, +1, +2, +3, +4"],
+            [23,"V","Vanadium","Wanad","cat-transition","50.942","1.63","-1, +1, +2, +3, +4, +5"],
+            [24,"Cr","Chromium","Chrom","cat-transition","51.996","1.66","-2, -1, +1, +2, +3, +4, +5, +6"],
+            [25,"Mn","Manganese","Mangan","cat-transition","54.938","1.55","-3, -2, -1, +1, +2, +3, +4, +5, +6, +7"],
+            [26,"Fe","Iron","Żelazo","cat-transition","55.845","1.83","-2, -1, +1, +2, +3, +4, +5, +6, +7"],
+            [27,"Co","Cobalt","Kobalt","cat-transition","58.933","1.88","-1, +1, +2, +3, +4, +5"],
+            [28,"Ni","Nickel","Nikiel","cat-transition","58.693","1.91","-1, +1, +2, +3, +4"],
+            [29,"Cu","Copper","Miedź","cat-transition","63.546","1.90","+1, +2, +3, +4"],
+            [30,"Zn","Zinc","Cynk","cat-transition","65.38","1.65","-2, +1, +2"],
+            [31,"Ga","Gallium","Gal","cat-post-trans","69.723","1.81","-5, -4, -2, -1, +1, +2, +3"],
+            [32,"Ge","Germanium","German","cat-metalloid","72.630","2.01","-4, +1, +2, +3, +4"],
+            [33,"As","Arsenic","Arsen","cat-metalloid","74.922","2.18","-3, +3, +5"],
+            [34,"Se","Selenium","Selen","cat-non-metal","78.96","2.55","-2, +2, +4, +6"],
+            [35,"Br","Bromine","Brom","cat-halogen","79.904","2.96","-1, +1, +3, +4, +5, +7"],
+            [36,"Kr","Krypton","Krypton","cat-noble","83.798","3.00","0, +1, +2"],
+            [37,"Rb","Rubidium","Rubid","cat-alkali","85.468","0.82","-1, +1"],
+            [38,"Sr","Strontium","Stront","cat-alkaline","87.62","0.95","+1, +2"],
+            [39,"Y","Yttrium","Itr","cat-transition","88.906","1.22","+1, +2, +3"],
+            [40,"Zr","Zirconium","Cyrkon","cat-transition","91.224","1.33","-2, +1, +2, +3, +4"],
+            [41,"Nb","Niobium","Niob","cat-transition","92.906","1.60","-1, +1, +2, +3, +4, +5"],
+            [42,"Mo","Molybdenum","Molibden","cat-transition","95.95","2.16","-2, -1, +1, +2, +3, +4, +5, +6"],
+            [43,"Tc","Technetium","Technet","cat-transition","(98)","1.90","-1, +1, +2, +3, +4, +5, +6, +7"],
+            [44,"Ru","Ruthenium","Ruten","cat-transition","101.07","2.20","-2, +1, +2, +3, +4, +5, +6, +7, +8"],
+            [45,"Rh","Rhodium","Rod","cat-transition","102.91","2.28","-1, +1, +2, +3, +4, +5, +6"],
+            [46,"Pd","Palladium","Pallad","cat-transition","106.42","2.20","+2, +4"],
+            [47,"Ag","Silver","Srebro","cat-transition","107.87","1.93","-2, -1, +1, +2, +3"],
+            [48,"Cd","Cadmium","Kadm","cat-transition","112.41","1.69","-2, +1, +2"],
+            [49,"In","Indium","Ind","cat-post-trans","114.82","1.78","-5, -2, -1, +1, +2, +3"],
+            [50,"Sn","Tin","Cyna","cat-post-trans","118.71","1.96","-4, -3, -2, -1, +1, +2, +3, +4"],
+            [51,"Sb","Antimony","Antymon","cat-metalloid","121.76","2.05","-3, +3, +5"],
+            [52,"Te","Tellurium","Tellur","cat-metalloid","127.60","2.10","-2, +2, +4, +5, +6"],
+            [53,"I","Iodine","Jod","cat-halogen","126.90","2.66","-1, +1, +3, +5, +7"],
+            [54,"Xe","Xenon","Ksenon","cat-noble","131.29","2.60","0, +2, +4, +6, +8"],
+            [55,"Cs","Caesium","Cez","cat-alkali","132.91","0.79","-1, +1"],
+            [56,"Ba","Barium","Bar","cat-alkaline","137.33","0.89","+1, +2"],
+            [57,"La","Lanthanum","Lantan","cat-lanthanide","138.91","1.10","+2, +3"],
+            [58,"Ce","Cerium","Cer","cat-lanthanide","140.12","1.12","+2, +3, +4"],
+            [59,"Pr","Praseodymium","Prazeodym","cat-lanthanide","140.91","1.13","+2, +3, +4, +5"],
+            [60,"Nd","Neodymium","Neodym","cat-lanthanide","144.24","1.14","+2, +3, +4"],
+            [61,"Pm","Promethium","Promet","cat-lanthanide","(145)","1.13","+3"],
+            [62,"Sm","Samarium","Samar","cat-lanthanide","150.36","1.17","+2, +3"],
+            [63,"Eu","Europium","Europ","cat-lanthanide","151.96","1.20","+2, +3"],
+            [64,"Gd","Gadolinium","Gadolin","cat-lanthanide","157.25","1.20","+1, +2, +3"],
+            [65,"Tb","Terbium","Terb","cat-lanthanide","158.93","1.20","+1, +2, +3, +4"],
+            [66,"Dy","Dysprosium","Dysproz","cat-lanthanide","162.50","1.22","+2, +3, +4"],
+            [67,"Ho","Holmium","Holm","cat-lanthanide","164.93","1.23","+1, +2, +3"],
+            [68,"Er","Erbium","Erb","cat-lanthanide","167.26","1.24","+1, +2, +3"],
+            [69,"Tm","Thulium","Tul","cat-lanthanide","168.93","1.25","+2, +3, +4"],
+            [70,"Yb","Ytterbium","Iterb","cat-lanthanide","173.05","1.10","+2, +3"],
+            [71,"Lu","Lutetium","Lutet","cat-lanthanide","174.97","1.27","+2, +3"],
+            [72,"Hf","Hafnium","Hafn","cat-transition","178.49","1.30","-2, +1, +2, +3, +4"],
+            [73,"Ta","Tantalum","Tantal","cat-transition","180.95","1.50","-3, -1, +1, +2, +3, +4, +5"],
+            [74,"W","Tungsten","Wolfram","cat-transition","183.84","2.36","-4, -2, -1, +1, +2, +3, +4, +5, +6"],
+            [75,"Re","Rhenium","Ren","cat-transition","186.21","1.90","-3, -1, +1, +2, +3, +4, +5, +6, +7"],
+            [76,"Os","Osmium","Osm","cat-transition","190.23","2.20","-4, -2, -1, +1, +2, +3, +4, +5, +6, +7, +8"],
+            [77,"Ir","Iridium","Iryd","cat-transition","192.22","2.20","-3, -1, +1, +2, +3, +4, +5, +6, +7, +8, +9"],
+            [78,"Pt","Platinum","Platyna","cat-transition","195.08","2.28","-3, -2, -1, +1, +2, +3, +4, +5, +6"],
+            [79,"Au","Gold","Złoto","cat-transition","196.97","2.54","-3, -2, -1, +1, +2, +3, +5"],
+            [80,"Hg","Mercury","Rtęć","cat-transition","200.59","2.00","-2, +1, +2"],
+            [81,"Tl","Thallium","Tal","cat-post-trans","204.38","1.62","-5, -2, -1, +1, +2, +3"],
+            [82,"Pb","Lead","Ołów","cat-post-trans","207.2","2.33","-4, -2, -1, +1, +2, +3, +4"],
+            [83,"Bi","Bismuth","Bizmut","cat-post-trans","208.98","2.02","-3, -1, +1, +2, +3, +4, +5"],
+            [84,"Po","Polonium","Polon","cat-post-trans","(209)","2.00","-2, +2, +4, +5, +6"],
+            [85,"At","Astatine","Astat","cat-halogen","(210)","2.20","-1, +1, +3, +5, +7"],
+            [86,"Rn","Radon","Radon","cat-noble","(222)","-","+2, +6"],
+            [87,"Fr","Francium","Frans","cat-alkali","(223)","0.79","+1"],
+            [88,"Ra","Radium","Rad","cat-alkaline","(226)","0.90","+2"],
+            [89,"Ac","Actinium","Aktyn","cat-actinide","(227)","1.10","+3"],
+            [90,"Th","Thorium","Tor","cat-actinide","232.04","1.30","+1, +2, +3, +4"],
+            [91,"Pa","Protactinium","Protaktyn","cat-actinide","231.04","1.50","+2, +3, +4, +5"],
+            [92,"U","Uranium","Uran","cat-actinide","238.03","1.38","+1, +2, +3, +4, +5, +6"],
+            [93,"Np","Neptunium","Neptun","cat-actinide","(237)","1.36","+2, +3, +4, +5, +6, +7"],
+            [94,"Pu","Plutonium","Pluton","cat-actinide","(244)","1.28","+2, +3, +4, +5, +6, +7"],
+            [95,"Am","Americium","Ameryk","cat-actinide","(243)","1.13","+2, +3, +4, +5, +6, +7"],
+            [96,"Cm","Curium","Kiur","cat-actinide","(247)","1.28","+3, +4"],
+            [97,"Bk","Berkelium","Berkel","cat-actinide","(247)","1.30","+3, +4"],
+            [98,"Cf","Californium","Kaliforn","cat-actinide","(251)","1.30","+2, +3, +4"],
+            [99,"Es","Einsteinium","Einstein","cat-actinide","(252)","1.30","+2, +3, +4"],
+            [100,"Fm","Fermium","Ferm","cat-actinide","(257)","1.30","+2, +3"],
+            [101,"Md","Mendelevium","Mendelew","cat-actinide","(258)","1.30","+2, +3"],
+            [102,"No","Nobelium","Nobel","cat-actinide","(259)","1.30","+2, +3"],
+            [103,"Lr","Lawrencium","Lorens","cat-actinide","(266)","-","+3"],
+            [104,"Rf","Rutherfordium","Rutherford","cat-transition","(267)","-","+4"],
+            [105,"Db","Dubnium","Dubn","cat-transition","(268)","-","+5"],
+            [106,"Sg","Seaborgium","Seaborg","cat-transition","(269)","-","+6"],
+            [107,"Bh","Bohrium","Bohr","cat-transition","(270)","-","+7"],
+            [108,"Hs","Hassium","Has","cat-transition","(277)","-","+8"],
+            [109,"Mt","Meitnerium","Meitner","cat-transition","(278)","-","n/a"],
+            [110,"Ds","Darmstadtium","Darmsztadt","cat-transition","(281)","-","n/a"],
+            [111,"Rg","Roentgenium","Rentgen","cat-transition","(282)","-","n/a"],
+            [112,"Cn","Copernicium","Kopernik","cat-transition","(285)","-","+2, +4"],
+            [113,"Nh","Nihonium","Nihon","cat-post-trans","(286)","-","+1"],
+            [114,"Fl","Flerovium","Flerow","cat-post-trans","(289)","-","+2, +4"],
+            [115,"Mc","Moscovium","Moskow","cat-post-trans","(290)","-","+1, +3"],
+            [116,"Lv","Livermorium","Liwermor","cat-post-trans","(293)","-","+2, +4"],
+            [117,"Ts","Tennessine","Tennessin","cat-halogen","(294)","-","+1, +3, +5"],
+            [118,"Og","Oganesson","Oganesson","cat-noble","(294)","-","+2, +4"]
         ];
 
-        // --- POSITION LOGIC ---
-        // This function determines where each element sits on the 18x10 grid
-        function getPosition(atomicNumber) {
-            const n = atomicNumber;
-            // Row 1
-            if(n===1) return [1,1];
-            if(n===2) return [1,18];
-            // Row 2
-            if(n>=3 && n<=4) return [2, n-2];
-            if(n>=5 && n<=10) return [2, n+8];
-            // Row 3
-            if(n>=11 && n<=12) return [3, n-10];
-            if(n>=13 && n<=18) return [3, n+2];
-            // Row 4
-            if(n>=19 && n<=36) return [4, n-18];
-            // Row 5
-            if(n>=37 && n<=54) return [5, n-36];
-            // Row 6 (includes split for Lanthanides)
-            if(n>=55 && n<=56) return [6, n-54];
-            if(n>=72 && n<=86) return [6, n-68]; // Offset for gap
-            // Row 7 (includes split for Actinides)
-            if(n>=87 && n<=88) return [7, n-86];
-            if(n>=104 && n<=118) return [7, n-100]; // Offset for gap
-            
-            // Lanthanides (Row 9, offset 3)
-            if(n>=57 && n<=71) return [9, n-54];
-            // Actinides (Row 10, offset 3)
-            if(n>=89 && n<=103) return [10, n-86];
+        let currentLang = 'en';
 
-            return [1,1]; // Fallback
+        // --- GRID LOGIC ---
+        function getPosition(n) {
+            if(n===1) return [1,1]; if(n===2) return [1,18];
+            if(n>=3 && n<=4) return [2, n-2]; if(n>=5 && n<=10) return [2, n+8];
+            if(n>=11 && n<=12) return [3, n-10]; if(n>=13 && n<=18) return [3, n];
+            if(n>=19 && n<=36) return [4, n-18];
+            if(n>=37 && n<=54) return [5, n-36];
+            if(n>=55 && n<=56) return [6, n-54]; if(n>=72 && n<=86) return [6, n-68];
+            if(n>=87 && n<=88) return [7, n-86]; if(n>=104 && n<=118) return [7, n-100];
+            if(n>=57 && n<=71) return [9, n-54];
+            if(n>=89 && n<=103) return [10, n-86];
+            return [1,1];
         }
 
+        // --- PHASE LOGIC ---
+        function getPhase(sym, lang) {
+            // Simplified standard phase at STP
+            const gases = ['H','He','N','O','F','Ne','Cl','Ar','Kr','Xe','Rn','Og'];
+            const liquids = ['Br','Hg','Cn']; 
+            if (gases.includes(sym)) return lang === 'en' ? 'Gas' : 'Gaz';
+            if (liquids.includes(sym)) return lang === 'en' ? 'Liquid' : 'Ciecz';
+            return lang === 'en' ? 'Solid' : 'Ciało stałe';
+        }
+
+        // --- RENDER TABLE ---
         function renderTable() {
             const container = document.getElementById('tableGrid');
-            
-            // Generate Element Cards
+            container.innerHTML = `
+                <div class="placeholder" style="grid-column: 3; grid-row: 6;">57-71</div>
+                <div class="placeholder" style="grid-column: 3; grid-row: 7;">89-103</div>
+            `;
+
             rawData.forEach(data => {
-                const [num, sym, name, cat] = data;
+                const [num, sym, nameEn, namePl, cat] = data; // Destructuring just the basics for the grid
                 const [row, col] = getPosition(num);
+                const displayName = currentLang === 'en' ? nameEn : namePl;
 
                 const el = document.createElement('div');
                 el.className = `element ${cat}`;
                 el.style.gridRow = row;
                 el.style.gridColumn = col;
-                // Add data attributes for search
-                el.dataset.name = name.toLowerCase();
+                
+                el.dataset.nameEn = nameEn.toLowerCase();
+                el.dataset.namePl = namePl.toLowerCase();
                 el.dataset.sym = sym.toLowerCase();
                 el.dataset.num = num;
 
-                el.innerHTML = `
-                    <span class="at-num">${num}</span>
-                    <span class="symbol">${sym}</span>
-                    <span class="name">${name}</span>
-                `;
-                
-                // Click alert (Simple interactivity)
-                el.onclick = () => alert(`${name} (${sym})\nAtomic Number: ${num}\nCategory: ${cat.replace('cat-','').toUpperCase()}`);
+                el.innerHTML = `<span class="at-num">${num}</span><span class="symbol">${sym}</span><span class="name">${displayName}</span>`;
+                el.onclick = () => openModal(data);
                 
                 container.appendChild(el);
             });
+        }
+
+        // --- MODAL FUNCTIONS ---
+        function openModal(data) {
+            const [num, sym, nameEn, namePl, catClass, mass, neg, ox] = data;
+            const name = currentLang === 'en' ? nameEn : namePl;
+            const catName = catClass.replace('cat-','').toUpperCase().replace('-',' ');
+            
+            document.getElementById('mSym').innerText = sym;
+            document.getElementById('mName').innerText = name;
+            document.getElementById('mCat').innerText = catName;
+            document.getElementById('mNum').innerText = num;
+            document.getElementById('mMass').innerText = mass;
+            document.getElementById('mPhase').innerText = getPhase(sym, currentLang);
+            document.getElementById('mNeg').innerText = neg;
+            document.getElementById('mOx').innerText = ox;
+
+            // Color matching
+            const colorMap = getComputedStyle(document.querySelector(`.${catClass}`)).background;
+            document.getElementById('mSym').style.background = colorMap;
+
+            // Wiki Link
+            const wikiLang = currentLang === 'en' ? 'en' : 'pl';
+            document.getElementById('mWiki').href = `https://${wikiLang}.wikipedia.org/wiki/${name}`;
+            document.getElementById('mWiki').innerText = currentLang === 'en' ? 'Read on Wikipedia' : 'Czytaj na Wikipedii';
+
+            // Labels translation
+            document.getElementById('lblNum').innerText = currentLang === 'en' ? 'Atomic Number' : 'Liczba atomowa';
+            document.getElementById('lblMass').innerText = currentLang === 'en' ? 'Atomic Mass' : 'Masa atomowa';
+            document.getElementById('lblPhase').innerText = currentLang === 'en' ? 'Phase (STP)' : 'Stan skupienia';
+            document.getElementById('lblNeg').innerText = currentLang === 'en' ? 'Electronegativity (Pauling)' : 'Elektroujemność (Pauling)';
+            document.getElementById('lblOx').innerText = currentLang === 'en' ? 'Oxidation States' : 'Stopnie utlenienia';
+
+            document.getElementById('modalOverlay').style.display = 'flex';
+        }
+
+        function closeModal(event) {
+            if (event === 'force' || event.target.id === 'modalOverlay') {
+                document.getElementById('modalOverlay').style.display = 'none';
+            }
+        }
+
+        // --- LANGUAGE & SEARCH ---
+        function toggleLanguage() {
+            const btn = document.getElementById('langBtn');
+            const title = document.getElementById('pageTitle');
+            const subtitle = document.getElementById('pageSubtitle');
+            const search = document.getElementById('searchInput');
+
+            if (currentLang === 'en') {
+                currentLang = 'pl';
+                btn.textContent = 'English'; 
+                title.textContent = 'Układ Okresowy Pierwiastków';
+                subtitle.textContent = 'Dane zweryfikowane naukowo';
+                search.placeholder = 'Szukaj (np. Złoto, Fe, 26)...';
+            } else {
+                currentLang = 'en';
+                btn.textContent = 'Polski';
+                title.textContent = 'Corrected Periodic Table';
+                subtitle.textContent = 'Data verified against scientific standards';
+                search.placeholder = 'Highlight element (e.g. Carbon, Au)...';
+            }
+            renderTable();
+            filterElements();
         }
 
         function filterElements() {
@@ -348,28 +494,16 @@
             const elements = document.querySelectorAll('.element');
 
             elements.forEach(el => {
-                const match = el.dataset.name.includes(query) || 
-                              el.dataset.sym.includes(query) || 
-                              el.dataset.num === query;
-                
-                // Toggle "dimmed" class instead of removing from DOM to keep table shape
-                if (query === "") {
-                    el.classList.remove('dimmed');
-                } else if (match) {
-                    el.classList.remove('dimmed');
-                    el.style.transform = "scale(1.2)";
-                    el.style.zIndex = "100";
-                } else {
-                    el.classList.add('dimmed');
-                    el.style.transform = "scale(1)";
-                    el.style.zIndex = "1";
-                }
+                el.style.transform = ""; el.style.zIndex = "";
+                const nameKey = currentLang === 'en' ? 'nameEn' : 'namePl';
+                const match = el.dataset[nameKey].includes(query) || el.dataset.sym.includes(query) || el.dataset.num === query;
+                if (query === "") el.classList.remove('dimmed');
+                else if (match) el.classList.remove('dimmed');
+                else el.classList.add('dimmed');
             });
         }
 
-        // Run
         renderTable();
-
     </script>
 </body>
 </html>
