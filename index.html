@@ -191,8 +191,15 @@
         .wiki-btn:hover { background: #2980b9; transform: scale(1.05); }
 
         /* --- Hamburger Menu --- */
+        .table-container {
+            position: relative;
+            width: max-content;
+            margin: 0 auto;
+        }
         #hamburger {
-            position: fixed;
+            position: absolute;
+            top: -55px;
+            left: 0;
             width: 35px;
             height: 24px;
             cursor: pointer;
@@ -354,11 +361,6 @@
 </head>
 <body>
 
-    <div id="hamburger" onclick="toggleMenu()">
-        <span></span>
-        <span></span>
-        <span></span>
-    </div>
     <div id="menuBackdrop" onclick="closeMenu()"></div>
     <nav id="sideMenu">
         <ul>
@@ -379,9 +381,16 @@
         <button id="langBtn" onclick="toggleLanguage()">Polski</button>
     </div>
 
+        <div class="table-container">
+        <div id="hamburger" onclick="toggleMenu()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
         <div class="periodic-table-wrapper">
             <div class="periodic-table" id="tableGrid"></div>
         </div>
+    </div>
 
     <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
         <div class="modal-content">
@@ -801,6 +810,10 @@
             const factors = { 'Pa': 1, 'kPa': 1000, 'hPa': 100, 'atm': 101325, 'bar': 100000, 'mmHg': 133.322 };
             return value * (factors[unit] || 1);
         }
+        function convertToMoles(value, unit) {
+            const factors = { 'mol': 1, 'mmol': 0.001, 'kmol': 1000, 'µmol': 0.000001, 'nmol': 1e-9 };
+            return value * (factors[unit] || 1);
+        }
         function convertVolume(vm, unit) {
             const factors = { 'm³': 1, 'dm³': 1000, 'L': 1000, 'cm³': 1000000 };
             return vm * (factors[unit] || 1);
@@ -825,35 +838,47 @@
                 showCalcResult(mass.toFixed(3) + ' g/mol', false);
             },
             'molar-volume': function() {
+                const nm = parseFloat(document.getElementById('mv-moles').value);
+                const nmUnit = document.getElementById('mv-nunit').value;
                 const temp = parseFloat(document.getElementById('mv-temp').value);
                 const pressure = parseFloat(document.getElementById('mv-pressure').value);
                 const punit = document.getElementById('mv-punit').value;
                 const vunit = document.getElementById('mv-vunit').value;
-                if (!temp || !pressure) return;
+                if (!nm || !temp || !pressure) return;
                 const pPa = convertToPa(pressure, punit);
-                if (pPa <= 0 || temp <= 0) { showCalcResult('Temperature and pressure must be positive.', true); return; }
+                if (pPa <= 0 || temp <= 0 || nm <= 0) { showCalcResult('All values must be positive.', true); return; }
                 const R = 8.314462618;
-                const vm = R * temp / pPa;
-                const vmDisplay = convertVolume(vm, vunit);
-                const detail = 'T = ' + temp + ' K, P = ' + pressure + ' ' + punit;
-                showCalcResult(vmDisplay.toFixed(4) + ' ' + vunit + '/mol', false, detail);
+                const nmol = convertToMoles(nm, nmUnit);
+                const v = nmol * R * temp / pPa;
+                const vDisplay = convertVolume(v, vunit);
+                const detail = 'n = ' + nm + ' mol, T = ' + temp + ' K, P = ' + pressure + ' ' + punit;
+                showCalcResult(vDisplay.toFixed(4) + ' ' + vunit, false, detail);
             },
             'molar-density': function() {
                 const formula = document.getElementById('md-formula').value.trim();
+                const nm = parseFloat(document.getElementById('md-moles').value);
+                const nmUnit = document.getElementById('md-nunit').value;
                 const temp = parseFloat(document.getElementById('md-temp').value);
                 const pressure = parseFloat(document.getElementById('md-pressure').value);
                 const punit = document.getElementById('md-punit').value;
                 const dunit = document.getElementById('md-dunit').value;
-                if (!formula || !temp || !pressure) return;
+                if (!formula || !nm || !temp || !pressure) return;
                 const M = calcMolarMass(formula);
                 if (M === null) { showCalcResult('Invalid formula or unknown element.', true); return; }
                 const pPa = convertToPa(pressure, punit);
-                if (pPa <= 0 || temp <= 0) { showCalcResult('Temperature and pressure must be positive.', true); return; }
+                if (pPa <= 0 || temp <= 0 || nm <= 0) { showCalcResult('All values must be positive.', true); return; }
                 const R = 8.314462618;
-                const density = (pPa * M) / (R * temp);
+                const nmol = convertToMoles(nm, nmUnit);
+                const v = nmol * R * temp / pPa;
+                const mass = nmol * M;
+                const density = mass / v;
                 const dDisplay = convertDensity(density, dunit);
-                const detail = 'M = ' + M.toFixed(3) + ' g/mol, T = ' + temp + ' K, P = ' + pressure + ' ' + punit;
-                showCalcResult(dDisplay.toFixed(4) + ' ' + dunit, false, detail);
+                const vDisplay = convertVolume(v, 'dm³');
+                const isPl = window.currentLang === 'pl' || false;
+                const breakdown = '<div class="breakdown-row"><span>' + (isPl ? 'Objętość (V)' : 'Volume (V)') + '</span><span>' + vDisplay.toFixed(4) + ' dm³</span></div>' +
+                    '<div class="breakdown-row"><span>' + (isPl ? 'Masa (m)' : 'Mass (m)') + '</span><span>' + mass.toFixed(3) + ' g</span></div>';
+                const detail = 'M = ' + M.toFixed(3) + ' g/mol, n = ' + nm + ' mol, T = ' + temp + ' K, P = ' + pressure + ' ' + punit;
+                showCalcResult(dDisplay.toFixed(4) + ' ' + dunit, false, detail, '', breakdown);
             },
             'reaction-efficiency': function() {
                 const actual = parseFloat(document.getElementById('re-actual').value);
@@ -895,12 +920,14 @@
             let html = '<div class="calc-body"><h3>' + t + '</h3><p class="desc">' + d + '</p>';
 
             if (type === 'molar-volume') {
+                html += '<div class="calc-group"><label>' + (isPl ? 'Liczba moli (n)' : 'Number of moles (n)') + '</label><div class="calc-row"><input type="number" id="mv-moles" placeholder="' + (isPl ? 'np. 1' : 'e.g. 1') + '" onkeydown="if(event.key===\'Enter\')runCalc()" style="flex:1"><select class="calc-select" id="mv-nunit"><option value="mol">mol</option><option value="mmol">mmol</option><option value="kmol">kmol</option><option value="µmol">µmol</option><option value="nmol">nmol</option></select></div></div>';
                 html += '<div class="calc-group"><label>' + (isPl ? 'Temperatura (K)' : 'Temperature (K)') + '</label><input type="number" id="mv-temp" placeholder="' + (isPl ? 'np. 273.15' : 'e.g. 273.15') + '" onkeydown="if(event.key===\'Enter\')runCalc()"></div>';
                 html += '<div class="calc-group"><label>' + (isPl ? 'Ciśnienie' : 'Pressure') + '</label><div class="calc-row"><input type="number" id="mv-pressure" placeholder="' + (isPl ? 'np. 101325' : 'e.g. 101325') + '" onkeydown="if(event.key===\'Enter\')runCalc()" style="flex:1"><select class="calc-select" id="mv-punit"><option value="Pa">Pa</option><option value="kPa">kPa</option><option value="hPa">hPa</option><option value="atm">atm</option><option value="bar">bar</option><option value="mmHg">mmHg</option></select></div></div>';
                 html += '<button class="calc-btn calc-btn-sm" onclick="normalConditions(\'mv\')" style="margin-bottom:10px;background:#555">' + (isPl ? 'Warunki normalne' : 'Normal Conditions') + '</button>';
                 html += '<div class="calc-group"><label>' + (isPl ? 'Jednostka objętości' : 'Volume unit') + '</label><select class="calc-select" id="mv-vunit"><option value="dm³">dm³</option><option value="L">L</option><option value="cm³">cm³</option><option value="m³">m³</option></select></div>';
             } else if (type === 'molar-density') {
                 html += '<div class="calc-group"><label>' + (isPl ? 'Wzór chemiczny' : 'Chemical Formula') + '</label><input type="text" id="md-formula" placeholder="' + (isPl ? 'np. H2O, O2' : 'e.g. H2O, O2') + '" onkeydown="if(event.key===\'Enter\')runCalc()"></div>';
+                html += '<div class="calc-group"><label>' + (isPl ? 'Liczba moli (n)' : 'Number of moles (n)') + '</label><div class="calc-row"><input type="number" id="md-moles" placeholder="' + (isPl ? 'np. 1' : 'e.g. 1') + '" onkeydown="if(event.key===\'Enter\')runCalc()" style="flex:1"><select class="calc-select" id="md-nunit"><option value="mol">mol</option><option value="mmol">mmol</option><option value="kmol">kmol</option><option value="µmol">µmol</option><option value="nmol">nmol</option></select></div></div>';
                 html += '<div class="calc-group"><label>' + (isPl ? 'Temperatura (K)' : 'Temperature (K)') + '</label><input type="number" id="md-temp" placeholder="' + (isPl ? 'np. 273.15' : 'e.g. 273.15') + '" onkeydown="if(event.key===\'Enter\')runCalc()"></div>';
                 html += '<div class="calc-group"><label>' + (isPl ? 'Ciśnienie' : 'Pressure') + '</label><div class="calc-row"><input type="number" id="md-pressure" placeholder="' + (isPl ? 'np. 101325' : 'e.g. 101325') + '" onkeydown="if(event.key===\'Enter\')runCalc()" style="flex:1"><select class="calc-select" id="md-punit"><option value="Pa">Pa</option><option value="kPa">kPa</option><option value="hPa">hPa</option><option value="atm">atm</option><option value="bar">bar</option><option value="mmHg">mmHg</option></select></div></div>';
                 html += '<button class="calc-btn calc-btn-sm" onclick="normalConditions(\'md\')" style="margin-bottom:10px;background:#555">' + (isPl ? 'Warunki normalne' : 'Normal Conditions') + '</button>';
@@ -981,18 +1008,7 @@
         }
 
         // --- HAMBURGER POSITIONING ---
-        function positionHamburger() {
-            const table = document.querySelector('.periodic-table');
-            if (!table) return;
-            const rect = table.getBoundingClientRect();
-            const h = document.getElementById('hamburger');
-            h.style.left = rect.left + 'px';
-            h.style.top = (rect.top - 45) + 'px';
-        }
-        window.addEventListener('resize', positionHamburger);
-
         renderTable();
-        positionHamburger();
     </script>
 </body>
 </html>
