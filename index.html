@@ -57,6 +57,7 @@
         .periodic-table-wrapper {
             overflow-x: auto;
             padding-bottom: 60px;
+            position: relative;
         }
 
         .periodic-table {
@@ -189,9 +190,186 @@
         }
         .wiki-btn:hover { background: #2980b9; transform: scale(1.05); }
 
+        /* --- Hamburger Menu --- */
+        #hamburger {
+            position: fixed;
+            width: 35px;
+            height: 24px;
+            cursor: pointer;
+            z-index: 1500;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 5px 0;
+        }
+        #hamburger span {
+            display: block;
+            height: 3px;
+            background: #ecf0f1;
+            border-radius: 3px;
+            transition: all 0.3s;
+        }
+        #hamburger.open span:nth-child(1) {
+            transform: rotate(45deg) translate(5px, 6px);
+        }
+        #hamburger.open span:nth-child(2) {
+            opacity: 0;
+        }
+        #hamburger.open span:nth-child(3) {
+            transform: rotate(-45deg) translate(5px, -6px);
+        }
+
+        /* --- Side Menu --- */
+        #menuBackdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1300;
+            display: none;
+        }
+        #menuBackdrop.open { display: block; }
+
+        #sideMenu {
+            position: fixed;
+            top: 0;
+            left: -280px;
+            width: 260px;
+            height: 100%;
+            background: #1a1a2e;
+            z-index: 1400;
+            transition: left 0.3s ease;
+            padding: 70px 0 20px 0;
+            box-shadow: 2px 0 15px rgba(0,0,0,0.5);
+            overflow-y: auto;
+        }
+        #sideMenu.open { left: 0; }
+        #sideMenu ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        #sideMenu li {
+            padding: 15px 25px;
+            color: #ecf0f1;
+            cursor: pointer;
+            font-size: 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            transition: background 0.2s;
+        }
+        #sideMenu li:hover { background: rgba(52, 152, 219, 0.2); }
+        #sideMenu .menu-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: #3498db;
+            letter-spacing: 1px;
+            padding: 20px 25px 8px;
+            cursor: default;
+            border: none;
+        }
+        #sideMenu .menu-label:hover { background: transparent; }
+
+        /* --- Calculator Modal Content --- */
+        .calc-body { padding: 10px 0; }
+        .calc-body h3 { margin: 0 0 5px 0; font-size: 1.5rem; color: #fff; }
+        .calc-body p.desc { color: #888; margin: 0 0 20px 0; font-size: 0.9rem; }
+        .calc-group { margin-bottom: 15px; }
+        .calc-group label { display: block; font-size: 0.75rem; color: #3498db; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .calc-group input {
+            width: 100%;
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid #444;
+            background: #1e1e1e;
+            color: white;
+            font-size: 1rem;
+            outline: none;
+            box-sizing: border-box;
+        }
+        .calc-group input:focus { border-color: #3498db; }
+        .calc-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: #3498db;
+            color: white;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 5px;
+        }
+        .calc-btn:hover { background: #2980b9; }
+        .calc-btn-sm { font-size: 0.85rem; padding: 8px 15px; width: auto; display: inline-block; }
+        .calc-row { display: flex; gap: 8px; align-items: stretch; }
+        .calc-row input { flex: 1; }
+        .calc-select {
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid #444;
+            background: #1e1e1e;
+            color: white;
+            font-size: 1rem;
+            outline: none;
+            cursor: pointer;
+            min-width: 80px;
+        }
+        .calc-select:focus { border-color: #3498db; }
+        .calc-result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #1e1e1e;
+            border-radius: 8px;
+            border: 1px solid #333;
+            display: none;
+        }
+        .calc-result.show { display: block; }
+        .calc-result .result-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #2ecc71;
+            text-align: center;
+        }
+        .calc-result .result-unit {
+            font-size: 0.85rem;
+            color: #888;
+            text-align: center;
+            margin-top: 3px;
+        }
+        .calc-result .result-breakdown {
+            margin-top: 15px;
+            border-top: 1px solid #333;
+            padding-top: 15px;
+        }
+        .calc-result .breakdown-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 3px 0;
+            font-size: 0.9rem;
+        }
+        .calc-result .breakdown-row span:last-child { font-weight: 600; }
+
     </style>
 </head>
 <body>
+
+    <div id="hamburger" onclick="toggleMenu()">
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
+    <div id="menuBackdrop" onclick="closeMenu()"></div>
+    <nav id="sideMenu">
+        <ul>
+            <li class="menu-label" id="menuSectionLabel">Stechiometry</li>
+            <li onclick="openCalculator('molar-mass')" id="menuMM">Molar Mass</li>
+            <li onclick="openCalculator('molar-volume')" id="menuMV">Molar Volume</li>
+            <li onclick="openCalculator('molar-density')" id="menuMD">Molar Density</li>
+            <li onclick="openCalculator('reaction-efficiency')" id="menuRE">Reaction Efficiency</li>
+            <li onclick="openCalculator('quant-composition')" id="menuQC">Quantitative Composition</li>
+        </ul>
+    </nav>
 
     <h1 id="pageTitle">Periodic Table of Elements</h1>
     <p class="subtitle" id="pageSubtitle">Comprehensive Data • Wikipedia Verified</p>
@@ -201,9 +379,9 @@
         <button id="langBtn" onclick="toggleLanguage()">Polski</button>
     </div>
 
-    <div class="periodic-table-wrapper">
-        <div class="periodic-table" id="tableGrid"></div>
-    </div>
+        <div class="periodic-table-wrapper">
+            <div class="periodic-table" id="tableGrid"></div>
+        </div>
 
     <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
         <div class="modal-content">
@@ -241,6 +419,13 @@
             </div>
 
             <a href="#" target="_blank" class="wiki-btn" id="mWiki">Wikipedia Article</a>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="calcOverlay" onclick="closeCalcModal(event)">
+        <div class="modal-content" style="max-width: 550px;">
+            <span class="modal-close" onclick="closeCalcModal('force')">&times;</span>
+            <div id="calcBody"></div>
         </div>
     </div>
 
@@ -482,15 +667,303 @@
                 title.textContent = 'Układ Okresowy Pierwiastków';
                 subtitle.textContent = 'Pełne dane • Zweryfikowane z Wikipedią';
                 search.placeholder = 'Szukaj...';
+                document.getElementById('menuSectionLabel').textContent = 'Stechiometria';
+                document.getElementById('menuMM').textContent = 'Masa molowa';
+                document.getElementById('menuMV').textContent = 'Objętość molowa';
+                document.getElementById('menuMD').textContent = 'Gęstość molowa';
+                document.getElementById('menuRE').textContent = 'Wydajność reakcji';
+                document.getElementById('menuQC').textContent = 'Skład ilościowy';
             } else {
                 currentLang = 'en';
                 btn.textContent = 'Polski';
                 title.textContent = 'Periodic Table of Elements';
                 subtitle.textContent = 'Comprehensive Data • Wikipedia Verified';
                 search.placeholder = 'Search...';
+                document.getElementById('menuSectionLabel').textContent = 'Stechiometry';
+                document.getElementById('menuMM').textContent = 'Molar Mass';
+                document.getElementById('menuMV').textContent = 'Molar Volume';
+                document.getElementById('menuMD').textContent = 'Molar Density';
+                document.getElementById('menuRE').textContent = 'Reaction Efficiency';
+                document.getElementById('menuQC').textContent = 'Quantitative Composition';
             }
             renderTable();
             filterElements();
+        }
+
+        // --- HAMBURGER MENU ---
+        function toggleMenu() {
+            document.getElementById('hamburger').classList.toggle('open');
+            document.getElementById('sideMenu').classList.toggle('open');
+            document.getElementById('menuBackdrop').classList.toggle('open');
+        }
+        function closeMenu() {
+            document.getElementById('hamburger').classList.remove('open');
+            document.getElementById('sideMenu').classList.remove('open');
+            document.getElementById('menuBackdrop').classList.remove('open');
+        }
+
+        // --- FORMULA PARSER ---
+        function parseFormula(formula) {
+            const elements = [];
+            let buffer = '', count = '', i = 0;
+            while (i < formula.length) {
+                const ch = formula[i];
+                if (ch === '(') {
+                    if (buffer) {
+                        const n = count ? parseInt(count) : 1;
+                        const existing = elements.find(e => e[0] === buffer);
+                        if (existing) existing[1] += n;
+                        else elements.push([buffer, n]);
+                        buffer = ''; count = '';
+                    }
+                    let depth = 1, j = i + 1;
+                    while (j < formula.length && depth > 0) {
+                        if (formula[j] === '(') depth++;
+                        else if (formula[j] === ')') depth--;
+                        j++;
+                    }
+                    const inner = parseFormula(formula.slice(i + 1, j - 1));
+                    let k = j;
+                    while (k < formula.length && /\d/.test(formula[k])) k++;
+                    const multiplier = k > j ? parseInt(formula.slice(j, k)) : 1;
+                    for (const [el, n] of inner) {
+                        const existing = elements.find(e => e[0] === el);
+                        if (existing) existing[1] += n * multiplier;
+                        else elements.push([el, n * multiplier]);
+                    }
+                    i = k;
+                } else if (/[A-Z]/.test(ch)) {
+                    if (buffer) {
+                        const n = count ? parseInt(count) : 1;
+                        const existing = elements.find(e => e[0] === buffer);
+                        if (existing) existing[1] += n;
+                        else elements.push([buffer, n]);
+                    }
+                    buffer = ch; count = ''; i++;
+                } else if (/[a-z]/.test(ch)) {
+                    buffer += ch; i++;
+                } else if (/\d/.test(ch)) {
+                    count += ch; i++;
+                } else { i++; }
+            }
+            if (buffer) {
+                const n = count ? parseInt(count) : 1;
+                const existing = elements.find(e => e[0] === buffer);
+                if (existing) existing[1] += n;
+                else elements.push([buffer, n]);
+            }
+            return elements;
+        }
+
+        function getAtomicMass(sym) {
+            const el = rawData.find(d => d[1] === sym);
+            if (!el) return null;
+            return parseFloat(el[5].replace(/[()]/g, ''));
+        }
+
+        function calcMolarMass(formula) {
+            const parsed = parseFormula(formula);
+            let total = 0;
+            for (const [sym, n] of parsed) {
+                const mass = getAtomicMass(sym);
+                if (mass === null || isNaN(mass)) return null;
+                total += mass * n;
+            }
+            return total;
+        }
+
+        // --- CALCULATOR MODALS ---
+        const calcLabels = {
+            'molar-mass': {
+                title: { en: 'Molar Mass', pl: 'Masa molowa' },
+                desc: { en: 'Calculate the molar mass of a chemical compound.', pl: 'Oblicz masę molową związku chemicznego.' }
+            },
+            'molar-volume': {
+                title: { en: 'Molar Volume', pl: 'Objętość molowa' },
+                desc: { en: 'Calculate the molar volume from the ideal gas law (PV=nRT).', pl: 'Oblicz objętość molową z równania Clapeyrona (PV=nRT).' }
+            },
+            'molar-density': {
+                title: { en: 'Molar Density', pl: 'Gęstość molowa' },
+                desc: { en: 'Calculate the density from the ideal gas law (PV=nRT).', pl: 'Oblicz gęstość z równania Clapeyrona (PV=nRT).' }
+            },
+            'reaction-efficiency': {
+                title: { en: 'Reaction Efficiency', pl: 'Wydajność reakcji' },
+                desc: { en: 'Calculate the percentage yield of a chemical reaction.', pl: 'Oblicz procentową wydajność reakcji chemicznej.' }
+            },
+            'quant-composition': {
+                title: { en: 'Quantitative Composition', pl: 'Skład ilościowy' },
+                desc: { en: 'Calculate the mass percentage of each element in a compound.', pl: 'Oblicz procent masowy każdego pierwiastka w związku.' }
+            }
+        };
+
+        // --- UNIT CONVERSION ---
+        function convertToPa(value, unit) {
+            const factors = { 'Pa': 1, 'kPa': 1000, 'hPa': 100, 'atm': 101325, 'bar': 100000, 'mmHg': 133.322 };
+            return value * (factors[unit] || 1);
+        }
+        function convertVolume(vm, unit) {
+            const factors = { 'm³': 1, 'dm³': 1000, 'L': 1000, 'cm³': 1000000 };
+            return vm * (factors[unit] || 1);
+        }
+        function convertDensity(density, unit) {
+            const factors = { 'g/m³': 1, 'g/dm³': 0.001, 'g/L': 0.001, 'g/cm³': 0.000001, 'kg/m³': 0.001 };
+            return density * (factors[unit] || 1);
+        }
+        function normalConditions(prefix) {
+            document.getElementById(prefix + '-temp').value = '273.15';
+            const punit = document.getElementById(prefix + '-punit').value;
+            const pValues = { 'Pa': '101325', 'kPa': '101.325', 'hPa': '1013.25', 'atm': '1', 'bar': '1.01325', 'mmHg': '760' };
+            document.getElementById(prefix + '-pressure').value = pValues[punit] || '101325';
+        }
+
+        const calcHandlers = {
+            'molar-mass': function() {
+                const formula = document.getElementById('mm-formula').value.trim();
+                if (!formula) return;
+                const mass = calcMolarMass(formula);
+                if (mass === null) { showCalcResult('Invalid formula or unknown element.', true); return; }
+                showCalcResult(mass.toFixed(3) + ' g/mol', false);
+            },
+            'molar-volume': function() {
+                const temp = parseFloat(document.getElementById('mv-temp').value);
+                const pressure = parseFloat(document.getElementById('mv-pressure').value);
+                const punit = document.getElementById('mv-punit').value;
+                const vunit = document.getElementById('mv-vunit').value;
+                if (!temp || !pressure) return;
+                const pPa = convertToPa(pressure, punit);
+                if (pPa <= 0 || temp <= 0) { showCalcResult('Temperature and pressure must be positive.', true); return; }
+                const R = 8.314462618;
+                const vm = R * temp / pPa;
+                const vmDisplay = convertVolume(vm, vunit);
+                const detail = 'T = ' + temp + ' K, P = ' + pressure + ' ' + punit;
+                showCalcResult(vmDisplay.toFixed(4) + ' ' + vunit + '/mol', false, detail);
+            },
+            'molar-density': function() {
+                const formula = document.getElementById('md-formula').value.trim();
+                const temp = parseFloat(document.getElementById('md-temp').value);
+                const pressure = parseFloat(document.getElementById('md-pressure').value);
+                const punit = document.getElementById('md-punit').value;
+                const dunit = document.getElementById('md-dunit').value;
+                if (!formula || !temp || !pressure) return;
+                const M = calcMolarMass(formula);
+                if (M === null) { showCalcResult('Invalid formula or unknown element.', true); return; }
+                const pPa = convertToPa(pressure, punit);
+                if (pPa <= 0 || temp <= 0) { showCalcResult('Temperature and pressure must be positive.', true); return; }
+                const R = 8.314462618;
+                const density = (pPa * M) / (R * temp);
+                const dDisplay = convertDensity(density, dunit);
+                const detail = 'M = ' + M.toFixed(3) + ' g/mol, T = ' + temp + ' K, P = ' + pressure + ' ' + punit;
+                showCalcResult(dDisplay.toFixed(4) + ' ' + dunit, false, detail);
+            },
+            'reaction-efficiency': function() {
+                const actual = parseFloat(document.getElementById('re-actual').value);
+                const theoretical = parseFloat(document.getElementById('re-theoretical').value);
+                if (!actual || !theoretical) return;
+                if (theoretical === 0) { showCalcResult('Theoretical yield cannot be zero.', true); return; }
+                const efficiency = (actual / theoretical) * 100;
+                showCalcResult(efficiency.toFixed(2) + '%', false, 'Actual: ' + actual + ' g, Theoretical: ' + theoretical + ' g');
+            },
+            'quant-composition': function() {
+                const formula = document.getElementById('qc-formula').value.trim();
+                if (!formula) return;
+                const totalMass = calcMolarMass(formula);
+                if (totalMass === null) { showCalcResult('Invalid formula or unknown element.', true); return; }
+                const parsed = parseFormula(formula);
+                let html = '';
+                for (const [sym, n] of parsed) {
+                    const mass = getAtomicMass(sym);
+                    if (mass !== null) {
+                        const contribution = mass * n;
+                        const pct = (contribution / totalMass) * 100;
+                        html += '<div class="breakdown-row"><span>' + sym + (n > 1 ? '<sub>' + n + '</sub>' : '') + '</span><span>' + contribution.toFixed(3) + ' g (' + pct.toFixed(2) + '%)</span></div>';
+                    }
+                }
+                html += '<div class="breakdown-row" style="border-top:1px solid #444;padding-top:8px;margin-top:8px;"><strong>Total</strong><strong>' + totalMass.toFixed(3) + ' g/mol (100%)</strong></div>';
+                showCalcResult('', false, '', formula, html);
+            }
+        };
+
+        function openCalculator(type) {
+            closeMenu();
+            const labels = calcLabels[type];
+            if (!labels) return;
+            const t = currentLang === 'en' ? labels.title.en : labels.title.pl;
+            const d = currentLang === 'en' ? labels.desc.en : labels.desc.pl;
+            const body = document.getElementById('calcBody');
+            const isPl = currentLang === 'pl';
+
+            let html = '<div class="calc-body"><h3>' + t + '</h3><p class="desc">' + d + '</p>';
+
+            if (type === 'molar-volume') {
+                html += '<div class="calc-group"><label>' + (isPl ? 'Temperatura (K)' : 'Temperature (K)') + '</label><input type="number" id="mv-temp" placeholder="' + (isPl ? 'np. 273.15' : 'e.g. 273.15') + '" onkeydown="if(event.key===\'Enter\')runCalc()"></div>';
+                html += '<div class="calc-group"><label>' + (isPl ? 'Ciśnienie' : 'Pressure') + '</label><div class="calc-row"><input type="number" id="mv-pressure" placeholder="' + (isPl ? 'np. 101325' : 'e.g. 101325') + '" onkeydown="if(event.key===\'Enter\')runCalc()" style="flex:1"><select class="calc-select" id="mv-punit"><option value="Pa">Pa</option><option value="kPa">kPa</option><option value="hPa">hPa</option><option value="atm">atm</option><option value="bar">bar</option><option value="mmHg">mmHg</option></select></div></div>';
+                html += '<button class="calc-btn calc-btn-sm" onclick="normalConditions(\'mv\')" style="margin-bottom:10px;background:#555">' + (isPl ? 'Warunki normalne' : 'Normal Conditions') + '</button>';
+                html += '<div class="calc-group"><label>' + (isPl ? 'Jednostka objętości' : 'Volume unit') + '</label><select class="calc-select" id="mv-vunit"><option value="dm³">dm³</option><option value="L">L</option><option value="cm³">cm³</option><option value="m³">m³</option></select></div>';
+            } else if (type === 'molar-density') {
+                html += '<div class="calc-group"><label>' + (isPl ? 'Wzór chemiczny' : 'Chemical Formula') + '</label><input type="text" id="md-formula" placeholder="' + (isPl ? 'np. H2O, O2' : 'e.g. H2O, O2') + '" onkeydown="if(event.key===\'Enter\')runCalc()"></div>';
+                html += '<div class="calc-group"><label>' + (isPl ? 'Temperatura (K)' : 'Temperature (K)') + '</label><input type="number" id="md-temp" placeholder="' + (isPl ? 'np. 273.15' : 'e.g. 273.15') + '" onkeydown="if(event.key===\'Enter\')runCalc()"></div>';
+                html += '<div class="calc-group"><label>' + (isPl ? 'Ciśnienie' : 'Pressure') + '</label><div class="calc-row"><input type="number" id="md-pressure" placeholder="' + (isPl ? 'np. 101325' : 'e.g. 101325') + '" onkeydown="if(event.key===\'Enter\')runCalc()" style="flex:1"><select class="calc-select" id="md-punit"><option value="Pa">Pa</option><option value="kPa">kPa</option><option value="hPa">hPa</option><option value="atm">atm</option><option value="bar">bar</option><option value="mmHg">mmHg</option></select></div></div>';
+                html += '<button class="calc-btn calc-btn-sm" onclick="normalConditions(\'md\')" style="margin-bottom:10px;background:#555">' + (isPl ? 'Warunki normalne' : 'Normal Conditions') + '</button>';
+                html += '<div class="calc-group"><label>' + (isPl ? 'Jednostka gęstości' : 'Density unit') + '</label><select class="calc-select" id="md-dunit"><option value="g/dm³">g/dm³</option><option value="g/L">g/L</option><option value="g/cm³">g/cm³</option><option value="kg/m³">kg/m³</option></select></div>';
+            } else {
+                const inputs = {
+                    'molar-mass': [{ id: 'mm-formula', label: 'Chemical Formula', pl: 'Wzór chemiczny', placeholder: 'e.g. H2O, C6H12O6', plh: 'np. H2O, C6H12O6' }],
+                    'reaction-efficiency': [
+                        { id: 're-actual', label: 'Actual Yield (g)', pl: 'Wydajność rzeczywista (g)', placeholder: 'e.g. 42.5', plh: 'np. 42.5' },
+                        { id: 're-theoretical', label: 'Theoretical Yield (g)', pl: 'Wydajność teoretyczna (g)', placeholder: 'e.g. 50.0', plh: 'np. 50.0' }
+                    ],
+                    'quant-composition': [{ id: 'qc-formula', label: 'Chemical Formula', pl: 'Wzór chemiczny', placeholder: 'e.g. H2O, H2SO4', plh: 'np. H2O, H2SO4' }]
+                };
+                const inpList = inputs[type] || [];
+                html += inpList.map(inp =>
+                    '<div class="calc-group"><label>' + (isPl ? inp.pl : inp.label) + '</label><input type="text" id="' + inp.id + '" placeholder="' + (isPl ? inp.plh : inp.placeholder) + '" onkeydown="if(event.key===\'Enter\')runCalc()"></div>'
+                ).join('');
+            }
+
+            html += '<button class="calc-btn" onclick="runCalc()">' + (isPl ? 'Oblicz' : 'Calculate') + '</button>' +
+                '<div class="calc-result" id="calcResult">' +
+                    '<div class="result-value" id="resultValue"></div>' +
+                    '<div class="result-unit" id="resultUnit"></div>' +
+                    '<div class="result-breakdown" id="resultBreakdown"></div>' +
+                '</div></div>';
+            body.innerHTML = html;
+            window.currentCalcType = type;
+            document.getElementById('calcOverlay').style.display = 'flex';
+        }
+
+        function runCalc() {
+            const type = window.currentCalcType;
+            if (!type) return;
+            const handler = calcHandlers[type];
+            if (handler) handler();
+        }
+
+        function showCalcResult(value, isError, detail, formula, breakdownHtml) {
+            const resultDiv = document.getElementById('calcResult');
+            const valEl = document.getElementById('resultValue');
+            const unitEl = document.getElementById('resultUnit');
+            const breakdownEl = document.getElementById('resultBreakdown');
+            breakdownEl.innerHTML = breakdownHtml || '';
+            if (isError) {
+                valEl.style.color = '#e74c3c';
+                valEl.innerText = value;
+                unitEl.innerText = '';
+            } else if (breakdownHtml) {
+                valEl.style.color = '#2ecc71';
+                valEl.innerText = formula || '';
+                unitEl.innerText = value || '';
+            } else {
+                valEl.style.color = '#2ecc71';
+                valEl.innerText = value;
+                unitEl.innerText = detail || '';
+            }
+            resultDiv.classList.add('show');
+        }
+
+        function closeCalcModal(event) {
+            if (event === 'force' || (event && event.target.id === 'calcOverlay')) {
+                document.getElementById('calcOverlay').style.display = 'none';
+            }
         }
 
         function filterElements() {
@@ -507,7 +980,19 @@
             });
         }
 
+        // --- HAMBURGER POSITIONING ---
+        function positionHamburger() {
+            const table = document.querySelector('.periodic-table');
+            if (!table) return;
+            const rect = table.getBoundingClientRect();
+            const h = document.getElementById('hamburger');
+            h.style.left = rect.left + 'px';
+            h.style.top = (rect.top - 45) + 'px';
+        }
+        window.addEventListener('resize', positionHamburger);
+
         renderTable();
+        positionHamburger();
     </script>
 </body>
 </html>
